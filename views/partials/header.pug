@@ -1,0 +1,16 @@
+.navbar.navbar-default.navbar-fixed-top
+  .container
+  header
+    h2(id='demo') Demo
+    #header-content
+        span(id='logo' style=`background-image: url(/images/tpp-logo.png)`)
+        h1(title=`${tppName}`)
+            a(href=`/`) #{tppName}
+        span(id='env') &nbsp;#{env}
+        //- if isLoggedIn
+        //-     a(href=`/logout` id='logout')
+        //-         button(class='opux-btn opux-btn-medium m0' type='button') Log out
+        .lang
+            span(fi) FI
+            span(sv) SV
+            span(en class='lang') EN

@@ -1,0 +1,29 @@
+extends layout
+
+block content
+  .page-header
+    h2 #{tppName}
+    .opux-loading
+    each authInfo, index in auths
+        .card
+            if authInfo.user
+                h3 Accounts of #{authInfo.user}
+            else
+                h3 Accounts of #{authInfo.authorizationId}
+            if authInfo.accountInfo
+                each val, index in authInfo.accountInfo
+                    li(class='opux-form-group bordered-row' id=`account-list-${index}`)
+                        .container-flex-space-between
+                            span #{val.accountName}
+                                a(href=val.transactionsLink class='name-container' title=`${val.stringified}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                                    .opux-truncate.name-truncate #{val.iban}
+                            span(class='opux-align-right') #{val.balanceLabel}
+            else
+                .opux-alert.opux-alert-error.error-comp
+                    .opux-alert-icon
+                        i(class="opux-icon opux-icon-error")
+                    .opux-alert-body
+                        h2 Failed to list accounts
+                        p #{authInfo.error}
+    p.
+        Accounts for #{auths.length} authorizations listed

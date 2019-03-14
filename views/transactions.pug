@@ -1,0 +1,38 @@
+extends layout
+
+block content
+  .opux-loading
+
+  .page-header
+    h4 #{iban}
+
+    .max-width-465.opux-nowrap
+        .opux-form-group.p0.m0-bottom
+            .small-screen-40-percent.opux-g-col-xs-4.opux-g-col-s-4
+                span.label Balance
+            .small-screen-60-percent.opux-g-col-xs-8.opux-g-col-s-8.opux-align-right
+                span #{balanceLabel}
+    p
+        a(href=`${accountLink}` class='link' onclick='javascript:document.body.classList.add(\'in-progress\')') Information of #{iban}
+
+    unless hasTransactions
+        a(class='card transaction container-flex-space-between bodytext' id=`transaction-list-empty`) No Transactions
+    else
+        each val, index in transactions
+            a(class='card transaction container-flex bodytext' title=`${val.stringified}` id=`transaction-list-${index}` href=`${val.transactionLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                .container-flex.width100.pXS
+                    span(class='transaction-date flex-shrink-0  bodytext') #{val.date}
+                    .name-truncate.mAuto-right.link #{val.label}
+                    .opux-nowrap.bodytext #{val.amount} e
+
+        if nextPageLink
+            a(class='container-flex-space-between bodytext' id=`transaction-next-page` href=`${nextPageLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                button(class='opux-btn opux-btn-medium m0 width90' type='button')
+                    span Next page
+
+        if allTransactionsLink
+            a(class='container-flex-space-between bodytext' id=`transactions-all` href=`${allTransactionsLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                button(class='opux-btn opux-btn-medium m0 width90' type='button')
+                    span Show all transactions
+
+        a(class='container-flex-space-between bodytext' id=`transaction-list-length`) #{transactions.length} transactions listed

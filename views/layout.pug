@@ -1,0 +1,23 @@
+doctype html
+html(lang='')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title #{title} - TPP Demo Application
+    meta(name='description', content='')
+    meta(name='theme-color' content='#4DA5F4')
+    meta(name='csrf-token', content=_csrf)
+    link(rel='shortcut icon', href=`/favicon.ico`)
+    link(rel='stylesheet', href=`https://saavutettava.op.fi/assets/opux/opux-1.45.css`)
+    link(rel='stylesheet', href=`/css/main.css`)
+
+  body
+    include partials/header
+
+    #root
+      include partials/nav
+      #content
+        block content
+      include partials/footer
+

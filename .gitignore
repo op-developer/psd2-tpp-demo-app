@@ -1,0 +1,15 @@
+wwwroot/*.js
+node_modules/
+fargate-deployment/node_modules/
+typings
+dist
+coverage
+.swagger-codegen
+.vscode
+junit.xml
+.idea
+.secrets
+.DS_Store
+**/.key
+**/.crt
+**/.pem

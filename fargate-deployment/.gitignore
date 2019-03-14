@@ -1,0 +1,5 @@
+*.js
+*.d.ts
+node_modules
+dist
+psd2-tpp-demo-conf.op.ts

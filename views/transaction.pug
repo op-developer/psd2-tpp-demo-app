@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  .page-header
+    h2 Transaction information
+    p
+      a(href=`${transactionsLink}` class='link') ⇐ Back to transactions
+    .bordered-list-container
+        each val, index in transaction
+          .opux-form-group.container-data-row.data-row
+            .opux-g-col-xs-4.opux-g-col-s-4.col-xxs
+              span(class='label') #{val.name}
+            .opux-g-col-xs-8.opux-g-col-s-8.col-xxs
+              span #{val.value}

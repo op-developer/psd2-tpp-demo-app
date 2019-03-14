@@ -1,0 +1,44 @@
+extends layout
+
+block content
+  h2 #{tppName}
+  .container-flex-start.opux-alert-notification
+    i(class='opux-icon opux-icon-alert')
+    span(class='mXS-top truncate-container') You can choose one of the PSD2 Sandbox test users: 88888881 or 88888882. Password is 1122.
+  form(method='post' action=`/createAuthorization` id='loginForm')
+
+    .buttons
+      p
+      p Press the button to continue
+      button(type='submit' id='submit' class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Proceed to authorization
+
+    h3 Select authorization targets
+
+    .container-flex-start.opux-alert-notification
+      i(class='opux-icon opux-icon-alert')
+      span(class='mXS-top truncate-container') These options are not displayed to end users in real-life applications. They demonstrate different technical options TPP's have available.
+
+    h3 Try out transaction range authorization (Checking TransactionRange causes authorization days to be ignored)
+    p
+      input(type='checkbox' name='TransactionRange' id='TransactionRange' form='loginForm')
+      label(for='TransactionRange') TransactionRange
+
+    p
+      input(type='text' value='2015-07-22' name='TransactionRangeFrom' id='TransactionRangeFrom' form='loginForm')
+      label(for='TransactionRangeFrom') TransactionRangeFrom
+
+    p
+      input(type='text' value='2019-02-20' name='TransactionRangeTo' id='TransactionRangeTo' form='loginForm')
+      label(for='TransactionRangeTo') TransactionRangeTo
+
+    h3 How long is the authorization valid (This value is ignored if TransactionRange is selected)
+    select(name='authorizationDays' class='opux-input-select' form='loginForm')
+        option(value='0') Once
+        option(value='1') One day
+        option(value='7') One week
+        option(value='14') Two weeks
+        option(value='30') One month
+        option(value='90' selected) Three months
+        option(value='120') 120 days (invalid)
+
+    .opux-loading
