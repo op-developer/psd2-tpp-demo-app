@@ -4,7 +4,7 @@ import { errToStr, toKeysAndValues } from '../services/utils';
 import { performance } from 'perf_hooks';
 import { getSession } from '../services/session';
 import { getEnv } from '../app/config';
-import { renderBalance } from './accountController';
+import { renderBalance } from '../controllers-ais/accountController';
 
 export const renderTransaction = async (req: Request, res: Response) => {
   if (req.params.accountId === undefined) {
@@ -14,6 +14,7 @@ export const renderTransaction = async (req: Request, res: Response) => {
     const authorizationId = req.params.authorizationId;
     const transaction = JSON.parse(req.query.transaction);
     const encodedStringifiedAccount = encodeURIComponent(req.query.account);
+
     const start1 = performance.now();
 
     return res.render('transaction', {
@@ -21,7 +22,7 @@ export const renderTransaction = async (req: Request, res: Response) => {
       title: 'Transaction information',
       tppName: getEnv().TPP_NAME,
       transaction: toKeysAndValues(transaction),
-      // tslint:disable-next-line: max-line-length
+      // tslint:disable-next-line:max-line-length
       transactionsLink: `/accounts/transactions/${authorizationId}/${req.params.accountId}?account=${encodedStringifiedAccount}`,
       loadingTime: (performance.now() - start1).toFixed(0),
       env: process.env.APP_ENVIRONMENT,
@@ -51,6 +52,9 @@ export const renderTransactions = async (req: Request, res: Response) => {
     const account = JSON.parse(stringifiedAccount);
     const encodedStringifiedAccount = encodeURIComponent(stringifiedAccount);
 
+    if (!session) {
+      throw new Error('Missing session.');
+    }
     if (!session.interface) {
       throw new Error('Missing interface.');
     }
@@ -74,7 +78,7 @@ export const renderTransactions = async (req: Request, res: Response) => {
       const { date, ...rest } = tr;
       return {
         ...rest,
-        // tslint:disable-next-line: max-line-length
+        // tslint:disable-next-line:max-line-length
         transactionLink: `/accounts/transaction/${authorizationId}/${accountId}?account=${encodedStringifiedAccount}&transaction=${encodeURIComponent(stringified)}`,
         stringified,
         date: date ? date.toLocaleDateString() : undefined,
@@ -95,12 +99,12 @@ export const renderTransactions = async (req: Request, res: Response) => {
       env: process.env.APP_ENVIRONMENT,
       accountLink: `/accounts/${authorizationId}/${req.params.accountId}`,
       nextPageLink: newContinuationToken
-      // tslint:disable-next-line: max-line-length
+      // tslint:disable-next-line:max-line-length
       ? `/accounts/transactions/${authorizationId}/${accountId}?continuationToken=${newContinuationToken}&account=${encodedStringifiedAccount}`
       : undefined,
       allTransactionsLink: showAllTransactions || !newContinuationToken
       ? undefined
-      // tslint:disable-next-line: max-line-length
+      // tslint:disable-next-line:max-line-length
       : `/accounts/transactions/${authorizationId}/${accountId}?showAllTransactions=true&account=${encodedStringifiedAccount}`,
       user: await authorizationId,
     });

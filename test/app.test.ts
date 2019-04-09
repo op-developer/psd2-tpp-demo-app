@@ -15,19 +15,19 @@ describe('Application', () => {
       .expect(404, done);
   });
 
-  it('/ should return 200 ok', async (done) => {
+  it('/accounts should return 200 ok', async (done) => {
     const app = await createApp(envName, 'aws');
     request(app)
-      .get('/')
+      .get('/accounts')
       .expect(200, done);
   });
 
-  it('/begin should redirect to front page', async (done) => {
+  it('/ should redirect to accounts', async (done) => {
     const app = await createApp(envName, 'aws');
     request(app)
-      .get('/begin')
+      .get('/')
       .expect(302)
-      .expect('Location', '/', done);
+      .expect('Location', '/accounts', done);
   });
 
   it('/logout should redirect', async (done) => {

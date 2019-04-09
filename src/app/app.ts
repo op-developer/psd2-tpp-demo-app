@@ -7,17 +7,16 @@ import errorHandler from 'errorhandler';
 import lusca from 'lusca';
 import path from 'path';
 
-import { createInterfacesToSession, requireSession } from '../services/session';
-import { logger } from '../services/logger';
-import { loadConfiguration, getSecrets } from './config';
+import * as oauthControllerAccounts from '../controllers-ais/oauthController';
 
-// Controllers (route handlers)
-import * as beginAuthorizeController from '../controllers/beginAuthorizeController';
-import * as logoutController from '../controllers/logoutController';
+import * as beginAuthorizeController from '../controllers-ais/beginAuthorizeController';
 import * as accountController from '../controllers-ais/accountController';
 import * as transactionController from '../controllers-ais/transactionController';
-import * as createAuthorizationController from '../controllers-ais/createAuthorizationController';
-import * as oauthController from '../controllers/oauthController';
+import * as createAccountAuthorizationController from '../controllers-ais/createAuthorizationController';
+
+import { createInterfacesToSessions, requireSession, getSessions } from '../services/session';
+import { getSecrets, loadConfiguration } from './config';
+import { verifyOauthSession } from '../services/oauthHandler';
 
 const createApp = async (envStr: string, host: string) => {
     const app = express();
@@ -47,30 +46,36 @@ const createApp = async (envStr: string, host: string) => {
     app.use(lusca.xssProtection(true));
 
     app.use(
-      express.static(path.join(__dirname, '../../public'), { maxAge: 31557600000 }),
+        express.static(path.join(__dirname, '../../public'), { maxAge: 31557600000 }),
     );
 
-    app.get('/', beginAuthorizeController.selectBank);
-    app.get('/begin', (_, res) => res.redirect('/'));
-    app.get('/authorize', beginAuthorizeController.beginAuthorize);
     app.get('/robots.txt', (_, res) => res.send('User-agent: *\nDisallow: /\n'));
 
-    app.get('/logout', logoutController.logout);
+    // Remove one session at a time
+    app.get('/logout', (req, res) => {
+        const sessions = getSessions(req);
+        if (sessions !== undefined) {
+          sessions.shift();
+        }
+        res.redirect('/');
+      });
 
-    // Authentication flow starting point
-    app.post('/createAuthorization', createAuthorizationController.postCreateAuthorization);
-    // OAuth callback url
-    app.get('/oauth/access_token', oauthController.getAccessToken);
+    // Default to accounts
+    app.get('/', (_, res) => res.redirect('/accounts'));
 
-    // Authenticated user endpoints where session is required
-    app.get('/accounts',
-        requireSession, createInterfacesToSession, accountController.renderAccounts);
+    // Accounts
+    app.get('/accounts/authorize', beginAuthorizeController.beginAuthorize);
+    app.post('/accounts/createAuthorization', createAccountAuthorizationController.postCreateAuthorization);
+    app.get('/accounts', createInterfacesToSessions, accountController.renderAccounts);
     app.get('/accounts/:authorizationId/:accountId',
-        requireSession, createInterfacesToSession, accountController.renderAccount);
+        requireSession, createInterfacesToSessions, accountController.renderAccount);
     app.get('/accounts/transactions/:authorizationId/:accountId',
-        requireSession, createInterfacesToSession, transactionController.renderTransactions);
+        requireSession, createInterfacesToSessions, transactionController.renderTransactions);
     app.get('/accounts/transaction/:authorizationId/:accountId',
-        requireSession, createInterfacesToSession, transactionController.renderTransaction);
+        requireSession, createInterfacesToSessions, transactionController.renderTransaction);
+
+    // OAuth callbacks
+    app.get('/oauth/access_token/accounts', verifyOauthSession, oauthControllerAccounts.getAccessToken);
 
     // Health check end points for monitoring
     app.get('/health-check', (_, res) => res.sendStatus(200).end());

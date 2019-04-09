@@ -1,4 +1,4 @@
-import * as AccountsApi from '../swagger-generated/accounts';
+import * as accounts from '../swagger-generated/accounts';
 import axios, { AxiosResponse } from 'axios';
 import { logger } from '../services/logger';
 import {
@@ -6,12 +6,13 @@ import {
   AisInterface,
   Transaction,
   Currency,
+  CardTransaction,
   Account,
 } from '../models/accountInformation';
-import { TokenData } from '../services/token';
 import { getEnv, createConfiguredClient } from '../app/config';
+import { SessionTokenData } from '../services/session';
 
-const getTransactionLabel = (transaction: AccountsApi.Transaction) => {
+const getTransactionLabel = (transaction: accounts.Transaction) => {
   if (transaction.recipient && transaction.recipient.name && transaction.recipient.name.length > 0) {
     return transaction.recipient.name;
   }
@@ -22,7 +23,7 @@ const getTransactionLabel = (transaction: AccountsApi.Transaction) => {
 
   return transaction.proprietaryTransactionDescription;
 };
-const mapAccountToGeneric = (account: AccountsApi.Account): Account => {
+const mapAccountToGeneric = (account: accounts.Account): Account => {
   return {
     accountId: account.accountId,
     currency: Currency.Euro,
@@ -33,7 +34,16 @@ const mapAccountToGeneric = (account: AccountsApi.Account): Account => {
   };
 };
 
-const mapTransactionToGeneric = (transaction: AccountsApi.Transaction): Transaction => {
+const mapCardTransactionToGeneric = (transaction: accounts.CardTransaction): CardTransaction => {
+  return {
+    description: transaction.description,
+    amount: transaction.amount,
+    currency: Currency.Euro,
+    postingDate: transaction.postingDate,
+  };
+};
+
+const mapTransactionToGeneric = (transaction: accounts.Transaction): Transaction => {
   return {
     transactionId: transaction.archiveId,
     date: transaction.valueDate ? new Date(transaction.valueDate) : undefined,
@@ -60,18 +70,29 @@ export const createDummyInterface = () => {
     getTransactionPage(_: string) {
       throw Error('User not authenticated');
     },
+    getAllCardTransactions(_: string) {
+      throw Error('User not authenticated');
+    },
+    getCardTransactionPage(_: string) {
+      throw Error('User not authenticated');
+    },
+    getCards() {
+      throw Error('User not authenticated');
+    },
   };
 };
 
-export const createInterface = (tokens: TokenData, apiKey: string): AisInterface => {
+export const createInterface = (tokens: SessionTokenData, apiKey: string): AisInterface => {
   const env = getEnv();
-  const accountsApi = AccountsApi.AccountsApiFp();
+  const accountsApi = accounts.AccountsApiFp();
+  const cardsApi = accounts.CardsApiFp();
   const httpsAgent = createConfiguredClient();
 
   const getTransactionPageHelper = async (
     accountId: string,
     continuationToken?: string,
   ) => {
+    logger.debug(`Asking new page of account transactions with: ${continuationToken}`);
     const page = await accountsApi.getAccountTransactions(
       accountId,
       apiKey,
@@ -82,7 +103,34 @@ export const createInterface = (tokens: TokenData, apiKey: string): AisInterface
       `Bearer ${tokens.access_token}`,
       continuationToken,
     )(axios.create({ httpsAgent }), env.PSD2_AIS_API_URL)
-      .then((response: AxiosResponse<AccountsApi.TransactionsResponse>) => {
+      .then((response: AxiosResponse<accounts.TransactionsResponse>) => {
+        return response.data;
+      });
+
+    logger.debug(`Got new continuationToken: ${page.continuationToken}`);
+
+    return {
+      transactions: page.transactions,
+      continuationToken: page.continuationToken,
+    };
+  };
+
+  const getCardTransactionPageHelper = async (
+    cardId: string,
+    continuationToken?: string,
+  ) => {
+    logger.debug(`Asking new page of card transactions with: ${continuationToken}`);
+    const page = await cardsApi.getCardTransactions(
+      cardId,
+      apiKey,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      `Bearer ${tokens.access_token}`,
+      continuationToken,
+    )(axios.create({ httpsAgent }), env.PSD2_AIS_API_URL)
+      .then((response: AxiosResponse<accounts.CardTransactionsResponse>) => {
         return response.data;
       });
 
@@ -112,6 +160,25 @@ export const createInterface = (tokens: TokenData, apiKey: string): AisInterface
     return newAccumulatedTransactions;
   };
 
+  const getAllCardTransactionsRecursively = async (
+    cardId: string,
+    accumulatedTransactions: CardTransaction[],
+    continuationToken?: string,
+  ): Promise<CardTransaction[]> => {
+    const page = await getCardTransactionPageHelper(cardId, continuationToken);
+    const newAccumulatedTransactions = accumulatedTransactions
+      .concat(page.transactions as ConcatArray<CardTransaction>);
+
+    if (page.continuationToken) {
+      return getAllCardTransactionsRecursively(
+        cardId,
+        newAccumulatedTransactions,
+        page.continuationToken,
+      );
+    }
+    return newAccumulatedTransactions;
+  };
+
   return {
     async getAccount(accountId: string) {
       const account = await accountsApi.getAccount(
@@ -123,11 +190,11 @@ export const createInterface = (tokens: TokenData, apiKey: string): AisInterface
         undefined,
         `Bearer ${tokens.access_token}`,
       )(axios.create({ httpsAgent }), env.PSD2_AIS_API_URL)
-        .then((response: AxiosResponse<AccountsApi.Account>) => response.data);
+        .then((response: AxiosResponse<accounts.Account>) => response.data);
       return mapAccountToGeneric(account);
     },
     async getAccounts() {
-      const accounts = await accountsApi.listAccounts(
+      const accountsList = await accountsApi.listAccounts(
         apiKey,
         undefined,
         undefined,
@@ -135,11 +202,10 @@ export const createInterface = (tokens: TokenData, apiKey: string): AisInterface
         undefined,
         `Bearer ${tokens.access_token}`,
       )(axios.create({ httpsAgent }), env.PSD2_AIS_API_URL)
-        .then((response: AxiosResponse<AccountsApi.Account[]>) => response.data);
-      return accounts.map(mapAccountToGeneric);
+        .then((response: AxiosResponse<accounts.Account[]>) => response.data);
+      return accountsList.map(mapAccountToGeneric);
     },
     async getTransactionPage(accountId: string, continuationToken?: string) {
-      logger.debug(`Asking new page of account transactions with: ${continuationToken}`);
       const transactionPage = await getTransactionPageHelper(accountId, continuationToken);
       return {
         transactions: transactionPage.transactions
@@ -150,6 +216,36 @@ export const createInterface = (tokens: TokenData, apiKey: string): AisInterface
     },
     async getAllTransactions(accountId: string) {
       return getAllTransactionsRecursively(accountId, []);
+    },
+    async getCards() {
+      const cards = await cardsApi.listCards(
+        apiKey,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        `Bearer ${tokens.access_token}`,
+      )(axios.create({ httpsAgent }), env.PSD2_AIS_API_URL)
+        .then((response: AxiosResponse<accounts.Card[]>) => response.data);
+      return cards.map((card: accounts.Card) => {
+        return {
+          cardId: card.cardId,
+          productName: card.productName,
+          cardNumber: card.cardNumber,
+        };
+      });
+    },
+    async getAllCardTransactions(cardId: string) {
+      return getAllCardTransactionsRecursively(cardId, []);
+    },
+    async getCardTransactionPage(cardId: string, continuationToken?: string) {
+      const cardTransactionPage = await getCardTransactionPageHelper(cardId, continuationToken);
+      return {
+        transactions: cardTransactionPage.transactions
+        ? cardTransactionPage.transactions.map(mapCardTransactionToGeneric)
+        : [],
+        continuationToken: cardTransactionPage.continuationToken,
+      };
     },
   };
 };

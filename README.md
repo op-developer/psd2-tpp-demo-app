@@ -3,7 +3,7 @@
 This repository contains a Node.js Express application demonstrating a PSD2 Third Party Provider (TPP).
 The application is meant for testing purposes and integration example for PSD2 interfaces.
 
-For more information, see <https://op-developer.fi.>
+For more information, see <https://op-developer.fi>
 
 ## Pre-requisities
 
@@ -35,10 +35,20 @@ Place certificates to `certs/client-cert/psd2-sandbox-prod/client.crt`, `certs/c
 
 You can configure secrets to `psd2-sandbox-prod.localhost.secrets` or `fargate-deployment/bin/psd2-tpp-demo-conf.example.ts` depending whether you run the service locally or in AWS.
 
+```bash
+# env/psd2-sandbox-prod.localhost.secrets
+API_KEY=xxxx
+CERT_PASSPHRASE=yyyy
+SESSION_SECRET=zzzz
+TPP_CLIENT_ID=tttt
+TPP_CLIENT_SECRET=mmmm
+```
+
 - Build and run the project
 
 ```bash
-# Example
+# Start the development version in localhost mode
+# Secrets are read from env/psd2-sandbox-prod.localhost.secrets
 npm run build && APP_ENVIRONMENT=psd2-sandbox npm start
 ```
 

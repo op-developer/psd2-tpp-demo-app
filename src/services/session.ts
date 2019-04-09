@@ -1,21 +1,50 @@
 import { Request, Response } from 'express';
-import { createInterface, createDummyInterface } from '../psd2/accountInformation';
+import { createInterface, createDummyInterface } from '../controllers-ais/accountInformation';
 import { AisInterface } from '../models/accountInformation';
-import { TokenData, getAccessTokenFromRefreshToken } from '../services/token';
+import { getAccessTokenFromRefreshToken, TokenData } from '../services/token';
 import { logger } from './logger';
 import moment from 'moment';
 import { getSecrets, getEnv } from '../app/config';
 
+/// The OAuth token information in session
+export interface SessionTokenData {
+    access_token: string;
+    refresh_token: string;
+    scope: string;
+    token_type: string;
+    expires_in: number;
+    /// UTC time in ISO format
+    expirationDate: string;
+}
+
+export enum AuthorizationType {
+    Undefined,
+    OpPsd2Accounts,
+}
+
 export interface AuthorizationData {
     interface?: AisInterface;
-    tokens?: TokenData;
-    authorizationId: string;
+    authorizationType: AuthorizationType;
+    tokens?: SessionTokenData;
+    authorizationId?: string;
+    cofIban?: string;
+    // The OAuth state during authorization
     oauthState?: string;
+    // The nonce during authorization
+    nonce?: string;
 }
 
 export interface GlobalSessionData {
     authorizations: AuthorizationData[];
 }
+
+export const EmptyAuthorization: AuthorizationData = {
+    authorizationType: AuthorizationType.Undefined,
+    interface: undefined,
+    tokens: undefined,
+    authorizationId: undefined,
+    oauthState: undefined,
+};
 
 const updateTokensIfNeeded = async (session: AuthorizationData, req: Request) => {
     if (session.tokens === undefined) {
@@ -26,7 +55,11 @@ const updateTokensIfNeeded = async (session: AuthorizationData, req: Request) =>
     const currentDate = moment();
     if (currentDate.isAfter(expDate)) {
         logger.info(`Tokens expired at ${session.tokens.expirationDate}`);
-        return getAccessTokenFromRefreshToken(session.tokens);
+        const oldTokens: TokenData = {
+            id_token: '',
+            ...session.tokens,
+        };
+        return getAccessTokenFromRefreshToken(oldTokens);
     }
     return session.tokens;
 };
@@ -37,7 +70,6 @@ const removeIncompleteAuthorizations = (req: Request) => {
     s.authorizations = s.authorizations.filter((a) => a.tokens !== undefined);
 };
 
-/** Middleware for requiring session. */
 export const requireSession = (req: Request, res: Response, next: () => void) => {
     const sessions = getSessions(req);
 
@@ -53,23 +85,21 @@ export const requireSession = (req: Request, res: Response, next: () => void) =>
     next();
 };
 
-export const createInterfacesToSession = async (req: Request, _: any, next: () => void) => {
-    const sessions = getSessions(req);
-    await Promise.all(sessions.map(async (session) => {
+/** Initializes the sessions. */
+export const createInterfacesToSessions = async (req: Request, _: any, next: () => void) => {
+    const createInterfaceToSession = async (session: AuthorizationData) => {
         session.tokens = await updateTokensIfNeeded(session, req);
-        session.interface = session.tokens ?
+        session.interface = session.tokens && session.authorizationType === AuthorizationType.OpPsd2Accounts ?
             createInterface(session.tokens, getSecrets().API_KEY) :
             createDummyInterface();
-    }));
+    };
+    await Promise.all(getSessions(req).map(createInterfaceToSession));
     next();
 };
 
 export const getCurrentSession = (req: Request) => {
     const s: GlobalSessionData = req.session as any;
-    if (s.authorizations === undefined) {
-        throw Error('Missing session');
-    }
-    return s.authorizations[0];
+    return s.authorizations ? s.authorizations[0] : EmptyAuthorization;
 };
 
 export const getSessions = (req: Request) => {
@@ -79,10 +109,7 @@ export const getSessions = (req: Request) => {
 
 export const getSession = (req: Request, authorizationId: string) => {
     const s: GlobalSessionData = req.session as any;
-    const session = s.authorizations &&
-        s.authorizations.find((a) => a.authorizationId === authorizationId);
-    if (session === undefined) {
-        throw Error('Missing session');
-    }
-    return session;
+    return s.authorizations ?
+        s.authorizations.find((a) => a.authorizationId === authorizationId) :
+        EmptyAuthorization;
 };

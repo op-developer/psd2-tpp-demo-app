@@ -1,3 +1,4 @@
 PSD2_AIS_API_URL=https://mtls-apis.psd2-sandbox.op.fi/accounts-psd2/v1
 OIDC_ACCESS_TOKEN_URL=https://mtls-apis.psd2-sandbox.op.fi/oauth/token
 OIDC_REDIRECT_URL=https://authorize.psd2-sandbox.op.fi/oauth/authorize
+OIDC_JWKS_URL=https://authorize.psd2-sandbox.op.fi/oauth/jwks/PSD2_OIDC

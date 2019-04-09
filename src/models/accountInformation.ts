@@ -1,4 +1,5 @@
 export type Iban = string | undefined;
+export type CardNumber = string | undefined;
 
 export enum IdentifierScheme {
   Iban = 'Iban',
@@ -33,10 +34,31 @@ export interface TransactionPage {
   transactions: Transaction[];
 }
 
+export interface Card {
+  cardId: string;
+  productName: string;
+  cardNumber: string;
+}
+
+export interface CardTransaction {
+  description?: string;
+  amount?: string;
+  currency?: Currency;
+  postingDate?: string;
+}
+
+export interface CardTransactionPage {
+  transactions?: CardTransaction[];
+  continuationToken?: string;
+}
+
 /** Interface for Account Information Services */
 export interface AisInterface {
   getAccounts(): Promise<Account[]>;
   getAccount(accountId: string): Promise<Account>;
   getAllTransactions(accountId: string): Promise<Transaction[]>;
   getTransactionPage(accountId: string, continuationToken?: string): Promise<TransactionPage>;
+  getCards(): Promise<Card[]>;
+  getAllCardTransactions(cardId: string): Promise<CardTransaction[]>;
+  getCardTransactionPage(cardId: string, continuationToken?: string): Promise<CardTransactionPage>;
 }

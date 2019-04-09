@@ -1,10 +1,10 @@
-import { isProdEnv } from './logger';
+import { isProdEnvironment } from '../app/config';
 
 /** Stringify error messages to be displayed.
  * Returns constant response in production environment.
  */
 export const errToStr = (err: any) => {
-  if (isProdEnv()) {
+  if (isProdEnvironment()) {
     return 'Error in application. Please check logs.';
   }
 

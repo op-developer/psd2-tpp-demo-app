@@ -5,7 +5,7 @@ block content
   .container-flex-start.opux-alert-notification
     i(class='opux-icon opux-icon-alert')
     span(class='mXS-top truncate-container') You can choose one of the PSD2 Sandbox test users: 88888881 or 88888882. Password is 1122.
-  form(method='post' action=`/createAuthorization` id='loginForm')
+  form(method='post' action=`/accounts/createAuthorization` id='loginForm')
 
     .buttons
       p
@@ -24,11 +24,11 @@ block content
       label(for='TransactionRange') TransactionRange
 
     p
-      input(type='text' value='2015-07-22' name='TransactionRangeFrom' id='TransactionRangeFrom' form='loginForm')
+      input(type='text' value=initialRangeStart name='TransactionRangeFrom' id='TransactionRangeFrom' form='loginForm')
       label(for='TransactionRangeFrom') TransactionRangeFrom
 
     p
-      input(type='text' value='2019-02-20' name='TransactionRangeTo' id='TransactionRangeTo' form='loginForm')
+      input(type='text' value=initialRangeEnd name='TransactionRangeTo' id='TransactionRangeTo' form='loginForm')
       label(for='TransactionRangeTo') TransactionRangeTo
 
     h3 How long is the authorization valid (This value is ignored if TransactionRange is selected)

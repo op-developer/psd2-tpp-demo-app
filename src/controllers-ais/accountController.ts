@@ -41,8 +41,8 @@ const collectAccountInfo = async (ais: AisInterface, authorizationId: string): P
       return {
         ...account,
         stringified,
-        transactionsLink:
-          `/accounts/transactions/${authorizationId}/${a.accountId}?account=${encodedStringifiedAccount}`,
+        // tslint:disable-next-line:max-line-length
+        transactionsLink: `/accounts/transactions/${authorizationId}/${a.accountId}?account=${encodedStringifiedAccount}`,
       };
     });
 };
@@ -102,6 +102,9 @@ export const renderAccount = async (req: Request, res: Response) => {
     const authorizationId = req.params.authorizationId;
     const accountId = req.params.accountId;
     const session = getSession(req, authorizationId);
+    if (!session) {
+      throw new Error('Missing session.');
+    }
     if (!session.interface) {
       throw new Error('Missing interface.');
     }
@@ -116,7 +119,7 @@ export const renderAccount = async (req: Request, res: Response) => {
       tppName: getEnv().TPP_NAME,
       loadingTime: (performance.now() - start1).toFixed(0),
       account: toKeysAndValues(account).map((a) => ({name: a.name, value: replaceAll(a.value, '"', '')})),
-      // tslint:disable-next-line: max-line-length
+      // tslint:disable-next-line
       transactionsLink: `/accounts/transactions/${req.params.authorizationId}/${req.params.accountId}?account=${encodedStringifiedAccount}`,
       env: process.env.APP_ENVIRONMENT,
     });

@@ -5,7 +5,8 @@ import { Psd2TppDemoStack, Parameters } from '../lib/psd2-tpp-demo-stack';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { SSM_PARAMETERS, STACK_TAGS, AWS_CONFIG, DNS_CONFIG } from './psd2-tpp-demo-conf.op';
 
-const appName = 'psd2-sandbox';
+// This must match how parameters are read in config.ts
+const appName = 'psd2-sandbox-demo';
 const serviceName = 'psd2-tpp-demo-app';
 const environmentName = 'psd2-sandbox-prod';
 const awsAppPrefix = 'Psd2Tpp';

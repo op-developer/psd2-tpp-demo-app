@@ -1,10 +1,3 @@
 nav.navi-big
-    if title == 'Select bank' || title == 'Start authorization'
-        a(href='/begin' class='navigation-top selected') New authorization
-    else
-        a(href='/begin' class='navigation-top') New authorization
-    if title == 'Accounts' || title == 'Account info' || title == 'Transactions' || title == 'Transaction information'
-        a(href='/accounts' class='navigation-top selected') Accounts
-    else
-        a(href='/accounts' class='navigation-top') Accounts
+    a(href='/accounts' class='navigation-top selected') Accounts
     a(href='/logout' class='navigation-top') Log out

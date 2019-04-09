@@ -1,9 +1,7 @@
 import * as winston from 'winston';
+import { isProdEnvironment } from '../app/config';
 
-export const isProdEnv = () =>
-    process.env.APP_ENVIRONMENT === 'psd2-sandbox';
-
-const logLevel = () => isProdEnv() ? 'info' : 'debug';
+const logLevel = () => isProdEnvironment() ? 'info' : 'debug';
 
 const options: winston.LoggerOptions = {
     level: logLevel(),

@@ -102,6 +102,9 @@ export class Psd2TppDemoStack extends cdk.Stack {
         protocol: elbv2.ApplicationProtocol.Http,
         port: containerPort,
         targets: [fargateService],
+        healthCheck: {
+          path: '/health-check',
+        },
       });
 
     const zone = route53.HostedZone.import(this, `${awsAppPrefix}Zone`, {
@@ -115,6 +118,6 @@ export class Psd2TppDemoStack extends cdk.Stack {
     });
 
     // Output the DNS where you can access your service
-    new cdk.Output(this, `${awsAppPrefix}DnsName`, { value: loadBalancer.dnsName });
+    new cdk.CfnOutput(this, `${awsAppPrefix}DnsName`, { value: loadBalancer.dnsName });
   }
 }

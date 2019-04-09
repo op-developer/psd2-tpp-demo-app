@@ -1,6 +1,6 @@
-wwwroot/*.js
 node_modules/
 fargate-deployment/node_modules/
+certs/
 typings
 dist
 coverage
@@ -8,8 +8,5 @@ coverage
 .vscode
 junit.xml
 .idea
-.secrets
 .DS_Store
-**/.key
-**/.crt
-**/.pem
+.secrets

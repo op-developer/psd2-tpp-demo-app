@@ -10,8 +10,9 @@ const globalEnv = {
     JWT_SIGNATURE_KID: '',
     OIDC_ACCESS_TOKEN_URL: '',
     PSD2_AIS_API_URL: '',
-    TPP_OAUTH_CALLBACK_URL: '',
+    TPP_OAUTH_CALLBACK_URL_ACCOUNTS: '',
     OIDC_REDIRECT_URL: '',
+    OIDC_JWKS_URL: '',
 };
 // The global secrets holder
 const globalSecrets = {
@@ -27,7 +28,7 @@ export const getEnv = () => globalEnv;
 /** Get the global secrets variables. */
 export const getSecrets = () => globalSecrets;
 
-const appName = 'psd2-sandbox';
+const appName = 'psd2-sandbox-demo';
 const serviceName = 'psd2-tpp-demo-app';
 
 export const loadSsmParams = async (region: string) => {
@@ -47,11 +48,12 @@ export const loadSsmParams = async (region: string) => {
     }
 };
 
-const isProdEnvironment = () => {
+/** Returns true if the app is running in production mode. */
+export const isProdEnvironment = () => {
   if (!process.env.APP_ENVIRONMENT) {
     throw new Error('Missing APP_ENVIRONMENT environment variable.');
   }
-  return process.env.APP_ENVIRONMENT.includes('prod') || process.env.APP_ENVIRONMENT === 'psd2-sandbox';
+  return process.env.APP_ENVIRONMENT.includes('prod');
 };
 
 const defaultAwsRegion = 'eu-central-1';
@@ -89,13 +91,14 @@ export const loadConfiguration = async (env: string, host: string) => {
 
     const envVars = dotenv.parse(fs.readFileSync(envConfigPath));
     globalEnv.TPP_NAME = envVars.TPP_NAME;
-    globalEnv.TPP_OAUTH_CALLBACK_URL = envVars.TPP_OAUTH_CALLBACK_URL;
+    globalEnv.TPP_OAUTH_CALLBACK_URL_ACCOUNTS = envVars.TPP_OAUTH_CALLBACK_URL_ACCOUNTS;
     globalEnv.JWT_SIGNATURE_KID = envVars.JWT_SIGNATURE_KID;
 
     const apiVars = dotenv.parse(fs.readFileSync(apiConfigPath));
     globalEnv.OIDC_ACCESS_TOKEN_URL = apiVars.OIDC_ACCESS_TOKEN_URL;
     globalEnv.PSD2_AIS_API_URL = apiVars.PSD2_AIS_API_URL;
     globalEnv.OIDC_REDIRECT_URL = apiVars.OIDC_REDIRECT_URL;
+    globalEnv.OIDC_JWKS_URL = apiVars.OIDC_JWKS_URL;
 
     logger.info(`Loaded configurations ${apiConfigPath} and ${envConfigPath}`);
 
@@ -104,6 +107,10 @@ export const loadConfiguration = async (env: string, host: string) => {
     return globalEnv;
 };
 
+/** Create a https.Agent that is configured to use the
+ * environment specific client certificate to establish
+ * a mutual TLS connection.
+ */
 export const createConfiguredClient = () => {
   const env = process.env.APP_ENVIRONMENT;
   const clientCertPath = `certs/client-cert/${env}/client.crt`;

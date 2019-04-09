@@ -1,0 +1,3 @@
+{
+  "app": "node dist/bin/psd2-tpp-demo.js"
+}
