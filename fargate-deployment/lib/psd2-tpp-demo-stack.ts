@@ -68,6 +68,7 @@ export class Psd2TppDemoStack extends cdk.Stack {
       }),
       memoryLimitMiB: 256,
       environment: env,
+      logging: new ecs.AwsLogDriver(this, `${awsAppPrefix}Log`, { streamPrefix: `${awsAppPrefix}` }),
     });
 
     container.addPortMappings({
