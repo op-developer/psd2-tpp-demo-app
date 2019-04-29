@@ -25,10 +25,10 @@
     "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
   },
   "dependencies": {
-    "aws-sdk": "^2.437.0",
+    "aws-sdk": "^2.444.0",
     "axios": "^0.18.0",
     "base64url": "^3.0.1",
-    "body-parser": "^1.18.3",
+    "body-parser": "^1.19.0",
     "compression": "^1.7.4",
     "cookie-session": "^2.0.0-beta.3",
     "cookiejar": "^2.1.2",
@@ -40,9 +40,9 @@
     "jsonwebtoken": "^8.5.1",
     "lusca": "^1.6.1",
     "moment": "^2.24.0",
-    "node-fetch": "^2.3.0",
+    "node-fetch": "^2.4.1",
     "pug": "^2.0.3",
-    "query-string": "^6.4.2",
+    "query-string": "^6.5.0",
     "request": "^2.88.0",
     "uuid": "^3.3.2",
     "winston": "^3.2.1"
@@ -69,11 +69,11 @@
     "concurrently": "^4.1.0",
     "jest": "^24.7.1",
     "jest-junit": "^6.3.0",
-    "nodemon": "^1.18.10",
+    "nodemon": "^1.18.11",
     "supertest": "^4.0.2",
     "ts-jest": "^24.0.2",
-    "ts-node": "^8.0.3",
-    "tslint": "^5.15.0",
-    "typescript": "^3.4.1"
+    "ts-node": "^8.1.0",
+    "tslint": "^5.16.0",
+    "typescript": "^3.4.5"
   }
 }
