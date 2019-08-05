@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { logger } from './logger';
-import { getCurrentSession } from './session';
+import { getCurrentSession, AuthorizationData } from './session';
 import { getEnv, getSecrets } from '../app/config';
 import crypto from 'crypto';
 import base64url from 'base64url';
-
-// tslint:disable-next-line:no-var-requires
-const IdTokenVerifier = require('idtoken-verifier');
+import { TokenData } from './token';
+import * as jwt from 'jsonwebtoken';
+import JwksRsa from 'jwks-rsa';
 
 interface IdToken {
     'nonce': string;
@@ -46,24 +46,55 @@ export const verifyHash = (expectedHash: string, value?: string) => {
   }
 };
 
-export const verifyIdToken = (idToken: string, nonce?: string, accessToken?: string, refreshToken?: string,
-                              code?: string, state?: string): Promise<IdToken> =>
-    new Promise((resolve, reject) => {
-        const verifier = new IdTokenVerifier({
-            issuer: getExpectedIssuer(),
-            audience: getSecrets().TPP_CLIENT_ID,
-            jwksURI: getEnv().OIDC_JWKS_URL,
-        });
+export const verifyIdTokenAndStoreTokensToSession = async (
+    tokens: TokenData, session: AuthorizationData) => {
 
+    const jwksUri = getEnv().OIDC_JWKS_URL;
+    await verifyIdToken(tokens.id_token, jwksUri, undefined, tokens.access_token, tokens.refresh_token);
+    // Skip unneeded id_token to save space in the session cookie
+    session.tokens = {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        scope: tokens.scope,
+        token_type: tokens.token_type,
+        expires_in: tokens.expires_in,
+        expirationDate: tokens.expirationDate,
+    };
+};
+
+export const verifyIdToken = (idToken: string, jwksUri: string,
+                              nonce?: string, accessToken?: string, refreshToken?: string,
+                              code?: string, state?: string, ignoreExpiration?: boolean): Promise<IdToken> =>
+    new Promise((resolve, reject) => {
         logger.info('Going to verify id_token');
 
-        // The library checks the nonce against null, not undefined
-        // tslint:disable-next-line:no-null-keyword
-        const maybeNonce = nonce === undefined ? null : nonce;
-        verifier.verify(idToken, maybeNonce, (error: any, payload: IdToken) => {
-            if (error !== null) {
-                return reject(error);
+        const options: jwt.VerifyOptions = {
+            algorithms: ['RS256'],
+            issuer: getExpectedIssuer(),
+            audience: getSecrets().TPP_CLIENT_ID,
+            ignoreExpiration,
+        };
+        const getKey = (header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) => {
+            const client = JwksRsa({jwksUri});
+            client.getSigningKey(header.kid || '', (_, key: JwksRsa.SigningKey) => {
+                if (key !== undefined) {
+                    const signingKey = (key as JwksRsa.RsaSigningKey).rsaPublicKey;
+                    callback(undefined, signingKey);
+                } else {
+                    callback(new Error(`Could not get the signing key from ${jwksUri}`));
+                }
+            });
+        };
+        jwt.verify(idToken, getKey, options, (err: jwt.VerifyErrors, decoded: string | object) => {
+            if (err !== null) {
+                return reject(err);
             }
+
+            const payload = decoded as any;
+            if (nonce !== undefined && payload.nonce !== nonce) {
+                reject(new Error('Nonce does not match.'));
+            }
+
             try {
                 // Depending on the contents verify either code and state or
                 // access token and refresh token
@@ -121,7 +152,8 @@ export const verifyOauthSession = async (req: Request, res: Response, next: () =
 
     try {
         if (req.query.id_token) {
-            const decoded = await verifyIdToken(req.query.id_token,
+            const jwksUri = getEnv().OIDC_JWKS_URL;
+            const decoded = await verifyIdToken(req.query.id_token, jwksUri,
                 session.nonce, undefined, undefined, code, session.oauthState);
             logger.debug(decoded);
         } else {

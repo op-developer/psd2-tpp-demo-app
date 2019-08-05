@@ -4,7 +4,7 @@ import { errToStr, toKeysAndValues } from '../services/utils';
 import { performance } from 'perf_hooks';
 import { getSession } from '../services/session';
 import { getEnv } from '../app/config';
-import { renderBalance } from '../controllers-ais/accountController';
+import { renderBalance } from './accountController';
 
 export const renderTransaction = async (req: Request, res: Response) => {
   if (req.params.accountId === undefined) {

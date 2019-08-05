@@ -12,18 +12,17 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@aws-cdk/aws-certificatemanager": "^0.29.0",
-    "@aws-cdk/aws-ec2": "^0.29.0",
-    "@aws-cdk/aws-ecs": "^0.29.0",
-    "@aws-cdk/aws-elasticloadbalancingv2": "^0.29.0",
-    "@aws-cdk/aws-iam": "^0.29.0",
-    "@aws-cdk/aws-kms": "^0.29.0",
-    "@aws-cdk/aws-route53": "^0.29.0",
-    "@aws-cdk/aws-ssm": "^0.29.0",
-    "@aws-cdk/cdk": "^0.29.0",
-    "@types/node": "^11.13.8",
-    "aws-cdk": "^0.29.0",
-    "typescript": "^3.4.5"
+    "@aws-cdk/aws-certificatemanager": "^1.3.0",
+    "@aws-cdk/aws-ec2": "^1.3.0",
+    "@aws-cdk/aws-ecs": "^1.3.0",
+    "@aws-cdk/aws-elasticloadbalancingv2": "^1.3.0",
+    "@aws-cdk/aws-iam": "^1.3.0",
+    "@aws-cdk/aws-kms": "^1.3.0",
+    "@aws-cdk/aws-route53": "^1.3.0",
+    "@aws-cdk/aws-ssm": "^1.3.0",
+    "@aws-cdk/core": "^1.3.0",
+    "aws-cdk": "^1.3.0",
+    "typescript": "^3.5.3"
   },
   "dependencies": {}
 }

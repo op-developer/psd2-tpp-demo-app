@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import fetch from 'node-fetch';
-import { logger } from '../services/logger';
+import { logger } from './logger';
 import moment from 'moment';
 import { getEnv, getSecrets, createConfiguredClient } from '../app/config';
 

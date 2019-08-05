@@ -1,5 +1,4 @@
 import express from 'express';
-import expressValidator from 'express-validator';
 import cookieSession from 'cookie-session';
 import compression from 'compression';
 import bodyParser from 'body-parser';
@@ -36,7 +35,6 @@ const createApp = async (envStr: string, host: string) => {
     app.disable('x-powered-by');
     /** Error Handler. Provides full stack - remove for production */
     app.use(errorHandler());
-    app.use(expressValidator());
     app.use(cookieSession({
         name: 'session',
         keys: [getSecrets().SESSION_SECRET],

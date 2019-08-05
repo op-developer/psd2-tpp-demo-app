@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { createInterface, createDummyInterface } from '../controllers-ais/accountInformation';
 import { AisInterface } from '../models/accountInformation';
-import { getAccessTokenFromRefreshToken, TokenData } from '../services/token';
+import { getAccessTokenFromRefreshToken, TokenData } from './token';
 import { logger } from './logger';
 import moment from 'moment';
 import { getSecrets, getEnv } from '../app/config';

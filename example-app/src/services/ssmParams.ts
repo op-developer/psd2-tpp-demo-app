@@ -1,6 +1,6 @@
 
 import { SSM } from 'aws-sdk';
-import { logger } from '../services/logger';
+import { logger } from './logger';
 
 export const getSsmParameters = async (path: string, region: string) => {
   const params: SSM.GetParametersByPathRequest = {

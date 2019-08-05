@@ -5,6 +5,10 @@ The application is meant for testing purposes and integration example for PSD2 i
 
 For more information, see <https://op-developer.fi>
 
+The demo is hosted at <https://example.successful-personal-finances.business>.
+
+Currently only Accounts API is included in the demo.
+
 ## Pre-requisities
 
 - Install [Node.js](https://nodejs.org/en/)

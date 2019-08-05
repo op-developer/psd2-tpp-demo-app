@@ -13,7 +13,8 @@ export const getAccessToken = (req: Request, res: Response) => {
 
   getAccessTokenFromCode(code, env.TPP_OAUTH_CALLBACK_URL_ACCOUNTS)
     .then(async (tokens) => {
-      await verifyIdToken(tokens.id_token, undefined, tokens.access_token, tokens.refresh_token);
+      const jwksUri = getEnv().OIDC_JWKS_URL;
+      await verifyIdToken(tokens.id_token, jwksUri, undefined, tokens.access_token, tokens.refresh_token);
       session.tokens = tokens;
     })
     .then(() => res.redirect('/accounts'))

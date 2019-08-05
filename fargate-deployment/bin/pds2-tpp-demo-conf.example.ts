@@ -20,8 +20,7 @@ export const AWS_CONFIG = {
 };
 
 export const DNS_CONFIG = {
-  zoneName: 'example-zone',
-  hostedZoneId: 'ZONE-ID',
+  domainName: 'domain.com',
   subdomainName: 'example',
   domainCertArn:
     'arn:aws:acm:eu-central-1:91919191919:certificate/de804ccf-9d01-4cb8-9570-70a295e20240',
