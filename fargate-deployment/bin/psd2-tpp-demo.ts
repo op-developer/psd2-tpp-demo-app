@@ -23,11 +23,12 @@ const containerEnv = { APP_ENVIRONMENT: environmentName };
 
 const app = new cdk.App();
 const demoStack = new Psd2TppDemoStack(app, awsAppPrefix,
-  DNS_CONFIG, containerEnv, STACK_TAGS, {
+  DNS_CONFIG, containerEnv, {
     env: {
         region: AWS_CONFIG.AwsRegion,
         account: AWS_CONFIG.AwsAccount,
     },
+    tags: STACK_TAGS,
   });
 
 storeParameters(demoStack, SSM_PARAMETERS);

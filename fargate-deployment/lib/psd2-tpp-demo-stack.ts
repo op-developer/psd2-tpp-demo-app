@@ -42,7 +42,7 @@ const ssmPolicy = 'AmazonSSMReadOnlyAccess';
 
 const applyTags = (construct: cdk.Construct, tags: Parameters) => {
   Object.keys(tags).forEach((name) =>
-  construct.node.applyAspect(new cdk.Tag(name, tags[name])));
+    cdk.Tag.add(construct, name, tags[name]));
 };
 
 /** Generic list of keys and values */
@@ -52,7 +52,7 @@ export interface Parameters {
 
 export class Psd2TppDemoStack extends cdk.Stack {
   constructor(scope: cdk.App, awsAppPrefix: string, dnsConfig: DnsConfig,
-              env: Parameters, tags: Parameters, props?: cdk.StackProps) {
+              env: Parameters, props: cdk.StackProps) {
     super(scope, `${awsAppPrefix}Stack`, props);
 
     // Create VPC and Fargate Cluster
@@ -86,8 +86,8 @@ export class Psd2TppDemoStack extends cdk.Stack {
       vpc,
       internetFacing: true,
     });
-    applyTags(loadBalancer, tags);
-    applyTags(vpc, tags);
+    applyTags(loadBalancer, props.tags as Parameters);
+    applyTags(vpc, props.tags as Parameters);
 
     createHttpsRedirect(this, awsAppPrefix, loadBalancer);
     loadBalancer
