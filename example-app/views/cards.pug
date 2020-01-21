@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  .page-header
+    h2 #{tppName}
+    .opux-loading
+    unless auths
+        a(class='container-flex-space-between bodytext' id=`auth-list-empty`) No authorizations
+    else
+        each auth, index in auths
+            .card
+                h3 Cards
+                each card, index in auth.cards
+                    li(class='opux-form-group bordered-row' id=`card-list-${index}`)
+                        .container-flex-space-between
+                            span #{card.productName}
+                                a(href=card.transactionsLink class='name-container' title=`${card.stringified}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                                    .opux-truncate.name-truncate #{card.cardNumber}
+                            span(class='opux-align-right') NOT AVAILABLE
+                if auth.cards.length == 0
+                    li(class='opux-form-group bordered-row' id=`card-list-${index}`)
+                        .container-flex-space-between
+                            span No cards authorized
+        p.
+            Cards for #{auths.length} authorizations listed

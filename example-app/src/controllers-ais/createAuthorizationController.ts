@@ -1,13 +1,15 @@
 import { Request, Response } from 'express';
-import { errToStr } from '../services/utils';
+import { logErrorMessage } from '../services/utils';
 import { logger } from '../services/logger';
-import { createClaimsQuery } from '../services/jwt';
+import { createClaimsQuery, getSsaSigningKey } from '../services/jwt';
 import * as queryString from 'query-string';
 import {
     getCurrentSession,
     GlobalSessionData,
     AuthorizationData,
     AuthorizationType,
+    removeAuthorization,
+    getSession,
 } from '../services/session';
 import { getEnv, getSecrets, createConfiguredClient } from '../app/config';
 import { randomBytes } from 'crypto';
@@ -22,9 +24,10 @@ const createOidcRedirectUri = (authorizationId: string,
   const env = getEnv();
   const scope = 'openid accounts';
   const clientId = getSecrets().TPP_CLIENT_ID;
+  const ssaSigningKey = getSsaSigningKey(process.env.APP_ENVIRONMENT as string);
   const params = {
     request: createClaimsQuery(authorizationId, oauthState, scope, nonce,
-      clientId, env.TPP_OAUTH_CALLBACK_URL_ACCOUNTS),
+      clientId, env.TPP_OAUTH_CALLBACK_URL_ACCOUNTS, ssaSigningKey),
     response_type: 'code id_token',
     client_id: clientId,
     scope,
@@ -77,7 +80,6 @@ export const createAuthorizationId = async (authorizationInfo: any) => {
   const time1 = (performance.now() - start1).toFixed(0);
   logger.info(`${time1} ms Got access token from client credentials`);
 
-  const env = getEnv();
   const authorizationApi = accounts.AuthorizationApiFp();
 
   const accessToken = token.access_token;
@@ -92,23 +94,57 @@ export const createAuthorizationId = async (authorizationInfo: any) => {
 
   logger.debug(`Create account request ${JSON.stringify(accountRequest)}`);
 
-  const apiKey = getSecrets().API_KEY;
   const start2 = performance.now();
 
   const authorization = await authorizationApi.createAuthorization(
-    apiKey,
+    getSecrets().API_KEY,
     undefined,
     undefined,
     undefined,
     undefined,
     `Bearer ${accessToken}`,
     accountRequest,
-  )(axios.create({ httpsAgent: createConfiguredClient() }), env.PSD2_AIS_API_URL)
+  )(axios.create({ httpsAgent: createConfiguredClient() }), getEnv().PSD2_AIS_API_URL)
     .then((response: AxiosResponse<accounts.Authorization>) => response.data);
 
   const time2 = (performance.now() - start2).toFixed(0);
   logger.info(`Account request created in ${time2} ms`);
   return authorization.authorizationId;
+};
+
+export const postRemoveAuthorization = (req: Request, res: Response) => {
+  const authorizationId = req.body.authorizationId;
+  if (authorizationId === undefined) {
+      return res.redirect('/');
+  }
+  removeAuthorization(req, authorizationId);
+  logger.info(`Removed authorization ${authorizationId}`);
+  return res.redirect('/');
+};
+
+export const postRevokeAuthorization = async (req: Request, res: Response) => {
+  const authorizationId = req.body.authorizationId;
+  if (authorizationId === undefined) {
+      return res.redirect('/');
+  }
+  const session = getSession(req, authorizationId);
+  if (!session || !session.tokens) {
+    throw new Error('Missing session.');
+  }
+  const authorizationApi = accounts.AuthorizationApiFp();
+  const authorization = await authorizationApi.revokeAuthorization(
+    authorizationId,
+    getSecrets().API_KEY,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    `Bearer ${session.tokens.access_token}`,
+  )(axios.create({ httpsAgent: createConfiguredClient() }), getEnv().PSD2_AIS_API_URL)
+    .then((response: AxiosResponse<accounts.Authorization>) => response.data);
+  logger.info(`Revoked authorization ${authorizationId}`);
+  logger.debug(authorization);
+  return res.redirect('/');
 };
 
 export const postCreateAuthorization = (req: Request, res: Response) => {
@@ -127,7 +163,7 @@ export const postCreateAuthorization = (req: Request, res: Response) => {
     .catch((err) =>
       res.status(500).render('error', {
         errorTitle: 'There was an error in the application',
-        errorText: errToStr(err),
+        errorText: logErrorMessage(err),
         tppName: getEnv().TPP_NAME,
         env: process.env.APP_ENVIRONMENT,
       }));

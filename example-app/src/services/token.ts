@@ -1,8 +1,9 @@
 import { v4 as uuid } from 'uuid';
 import fetch from 'node-fetch';
-import { logger } from './logger';
+import { logger } from '../services/logger';
 import moment from 'moment';
 import { getEnv, getSecrets, createConfiguredClient } from '../app/config';
+import { createExemptionQuery } from '../services/jwt';
 
 const createExpirationTimeStamp = (tokens: TokenData) => {
     const current = moment();
@@ -44,24 +45,29 @@ const clientCredentials = () => {
 export const getTokens = async (headers: { [key: string]: string }, body: string): Promise<TokenData> => {
     const env = getEnv();
     logger.info(`Request tokens from ${env.OIDC_ACCESS_TOKEN_URL} with body ${body}`);
-    const response = await fetch(env.OIDC_ACCESS_TOKEN_URL, {
-        agent: createConfiguredClient(),
-        method: 'POST',
-        body,
-        headers,
-    });
+    try {
+        const response = await fetch(env.OIDC_ACCESS_TOKEN_URL, {
+            agent: createConfiguredClient(),
+            method: 'POST',
+            body,
+            headers,
+        });
 
-    if (response.ok) {
-        const tokens: TokenData = await response.json();
-        if (tokens.error !== undefined) {
-            throw Error(tokens.error);
+        if (response.ok) {
+            const tokens: TokenData = await response.json();
+            if (tokens.error !== undefined) {
+                throw Error(tokens.error);
+            }
+            return tokens;
+        } else {
+            logger.error('Failed to fetch tokens');
+            logger.debug(response.headers);
+            logger.debug(`Failure data ${env.OIDC_ACCESS_TOKEN_URL} ${body}`);
+            throw Error(await response.text());
         }
-        return tokens;
-    } else {
-        logger.error('Failed to fetch tokens');
-        logger.debug(response.headers);
-        logger.debug(`Failure data ${env.OIDC_ACCESS_TOKEN_URL} ${body}`);
-        throw Error(await response.text());
+    }
+    catch (e) {
+        throw e;
     }
 };
 
@@ -82,6 +88,22 @@ export const getAccessTokenFromCode = async (code: string, redirectUri: string) 
     tokens.expirationDate = createExpirationTimeStamp(tokens);
     logger.info(`New tokens received. Expiration at ${tokens.expirationDate}`);
     logger.debug(tokens);
+    return tokens;
+};
+
+export const getTokensForExemption = async (
+                                                oauthState: string,
+                                                nonce: string,
+                                                authorizationId: string | undefined,
+                                                clientId: string,
+                                                secret: string,
+                                            ) => {
+    const assertion = createExemptionQuery(authorizationId, oauthState, nonce, clientId);
+    const body = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&scope=payments&client_id=' + clientId + '&client_secret=' + secret + '&assertion=' + assertion;
+    const tokens = await getTokens(getTokenHeaders(), body);
+
+    tokens.expirationDate = createExpirationTimeStamp(tokens);
+    logger.info(`[getTokensForExemption()] New tokens for exemption received: ${tokens}`);
     return tokens;
 };
 

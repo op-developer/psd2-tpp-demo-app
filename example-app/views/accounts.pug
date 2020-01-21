@@ -2,14 +2,11 @@ extends layout
 
 block content
   .page-header
-    h2 #{tppName}
     .opux-loading
     each authInfo, index in auths
         .card
-            if authInfo.user
-                h3 Accounts of #{authInfo.user}
-            else
-                h3 Accounts of #{authInfo.authorizationId}
+            h3 Accounts of&nbsp;
+              a(href=authInfo.authorizationIdLink) #{authInfo.authorizationId}
             if authInfo.accountInfo
                 each val, index in authInfo.accountInfo
                     li(class='opux-form-group bordered-row' id=`account-list-${index}`)
@@ -18,25 +15,41 @@ block content
                                 a(href=val.transactionsLink class='name-container' title=`${val.stringified}` onclick='javascript:document.body.classList.add(\'in-progress\')')
                                     .opux-truncate.name-truncate #{val.iban}
                             span(class='opux-align-right') #{val.balanceLabel}
+                form(method='post' action=`/accounts/revokeAuthorization` id='revokeAuthorizationForm')
+                    input(type='hidden' value=`${authInfo.authorizationId}` name='authorizationId')
+                    button(class='opux-btn opux-btn-alternate' type='submit' id='revoke' onclick='javascript:document.body.classList.add(\'in-progress\')') Revoke
             else
                 .opux-alert.opux-alert-error.error-comp
                     .opux-alert-icon
-                        i(class="opux-icon opux-icon-alert")
+                        i(class="opux-icon opux-icon-error")
                     .opux-alert-body
                         h2 Failed to list accounts
-                        p #{authInfo.error}
+                        span #{authInfo.error}
+                        form(method='post' action=`/accounts/removeAuthorization` id='removeAuthorizationForm')
+                            input(type='hidden' value=`${authInfo.authorizationId}` name='authorizationId')
+                            button(class='opux-btn opux-btn-alternate' type='submit' id='remove' onclick='javascript:document.body.classList.add(\'in-progress\')') Remove
+                        br
     if auths.length > 0
       p.
         Accounts for #{auths.length} authorizations listed
 
     h2 Proceed to make a new authorization
     p.
-      This is a demo application that shows how a Third Party Provider (TPP) could
-      ask user to authorize access to their accounts.
+      This is a demo application that shows how TPP would ask user to authorize access to their accounts.
     p.
-      <b>Click</b> the OP logo to proceed to authorization.
+      Select the bank you want to use for authorization.
     p
       ul
-        li 
-          a(class='opux-tooltip' data-tooltip='OP' href='/accounts/authorize')
-            img(src='/images/tupas/op.jpg' width='50')
+        li
+          include partials/tupas
+
+    if env != 'prod' && env != 'psd2-sandbox'
+      .container-flex-start.opux-alert-notification
+        i(class='opux-icon opux-icon-alert')
+        span(class='mXS-top truncate-container')
+          p
+            a(href=`${intentLink}` style='text-decoration: underline') Click here
+            span &nbsp;to view any intents that have been used in the active session.
+          p
+            a(href=`https://tpp-registry-ui-${env}.psd2.aws.op-palvelut.net` style='text-decoration: underline') Go to the TPP Registry browser
+

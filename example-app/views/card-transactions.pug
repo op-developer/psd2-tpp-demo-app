@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  .opux-loading
+
+  .page-header
+    h4 Card #{cardNumber}
+
+    p
+        a(href=`${cardInfoLink}` class='link' onclick='javascript:document.body.classList.add(\'in-progress\')') Information of #{cardNumber}
+
+    unless hasTransactions
+        a(class='card transaction container-flex-space-between bodytext' id=`transaction-list-empty`) No Transactions
+    else
+        each transaction, index in transactions
+            a(class='card transaction container-flex bodytext' title=`${transaction.stringified}` id=`transaction-list-${index}` href=`${transaction.transactionLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                .container-flex.width100.pXS
+                    span(class='transaction-date flex-shrink-0  bodytext') #{transaction.postingDate}
+                    .name-truncate.mAuto-right.link #{transaction.description}
+                    .opux-nowrap.bodytext #{transaction.amount} e
+
+        if nextPageLink
+            a(class='container-flex-space-between bodytext' id=`transaction-next-page` href=`${nextPageLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                button(class='opux-btn opux-btn-medium m0 width90' type='button')
+                    span Next page
+
+        if allTransactionsLink
+            a(class='container-flex-space-between bodytext' id=`transactions-all` href=`${allTransactionsLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')
+                button(class='opux-btn opux-btn-medium m0 width90' type='button')
+                    span Show all transactions
+
+        a(class='container-flex-space-between bodytext' id=`transaction-list-length`) #{transactions.length} transactions listed

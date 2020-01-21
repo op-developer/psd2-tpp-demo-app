@@ -50,61 +50,104 @@ export const loadSsmParams = async (region: string) => {
 
 /** Returns true if the app is running in production mode. */
 export const isProdEnvironment = () => {
-  if (!process.env.APP_ENVIRONMENT) {
-    throw new Error('Missing APP_ENVIRONMENT environment variable.');
-  }
-  return process.env.APP_ENVIRONMENT.includes('prod');
+  return getEnv().APP_ENVIRONMENT && getEnv().APP_ENVIRONMENT.includes('prod');
 };
+
+/** Get the log level depending if the app is running in production mode or not. */
+const getLogLevel = () => isProdEnvironment() ? 'info' : 'debug';
 
 const defaultAwsRegion = 'eu-central-1';
 const selectRegion = () =>
     process.env.AWS_REGION !== undefined ? process.env.AWS_REGION : defaultAwsRegion;
 
-const loadSecrets = async (secretsConfigPath: string) => {
-    if (isProdEnvironment() && process.env.HOST_ENV !== 'localhost') {
-        const region = selectRegion();
-        await loadSsmParams(region);
-        logger.info(`Loaded ${Object.keys(getSecrets()).length} secrets from SSM in ${region}`);
-    } else {
-        const secretVars = dotenv.parse(fs.readFileSync(secretsConfigPath));
-        globalSecrets.API_KEY = secretVars.API_KEY;
-        globalSecrets.CERT_PASSPHRASE = secretVars.CERT_PASSPHRASE;
-        globalSecrets.SESSION_SECRET = secretVars.SESSION_SECRET;
-        globalSecrets.TPP_CLIENT_ID = secretVars.TPP_CLIENT_ID;
-        globalSecrets.TPP_CLIENT_SECRET = secretVars.TPP_CLIENT_SECRET;
-        logger.info(`Loaded ${Object.keys(getSecrets()).length} secrets from ${secretsConfigPath}`);
-        logger.debug(globalSecrets);
-    }
+const loadSecrets = async () => {
+  const env = getEnv().APP_ENVIRONMENT;
+  const envConfigSuffix = getEnv().HOST_ENV;
+
+  // Defaults to test environment config
+  const secretsConfigPath = `env/${prodPublic() ? 'prod-public' : env}.${envConfigSuffix}.secrets`;
+  if (isProdEnvironment() && getEnv().HOST_ENV !== 'localhost') {
+    const secrets = loadSecretsFromSsm();
+    return secrets;
+  } else {
+    const secretVars = dotenv.parse(fs.readFileSync(secretsConfigPath));
+    const secrets = {
+      API_KEY: secretVars.API_KEY,
+      CERT_PASSPHRASE: secretVars.CERT_PASSPHRASE,
+      SESSION_SECRET: secretVars.SESSION_SECRET,
+      TPP_CLIENT_ID: secretVars.TPP_CLIENT_ID,
+      TPP_CLIENT_SECRET: secretVars.TPP_CLIENT_SECRET,
+    };
+    logger.info(`Loaded ${Object.keys(secrets).length} secrets from ${secretsConfigPath}`);
+    return secrets;
+  }
 };
 
 /** Load environment variables from .env file, where API keys,
  * API endpoints and passwords are configured. Must be done very early
  * in the startup process.
  */
-export const loadConfiguration = async (env: string, host: string) => {
-    const envConfigSuffix = host === 'aws' ? 'aws' : 'localhost';
+export const loadConfiguration = async () => {
+  configureLogLevel(getLogLevel());
 
-    // Defaults to test environment config
-    const envConfigPath = `env/${env}.${envConfigSuffix}`;
-    const apiConfigPath = `env/${env}.apis`;
-    const secretsConfigPath = `env/${env}.${envConfigSuffix}.secrets`;
+  globalEnv = loadGlobalEnv();
+  globalSecrets = await loadSecrets();
 
-    const envVars = dotenv.parse(fs.readFileSync(envConfigPath));
-    globalEnv.TPP_NAME = envVars.TPP_NAME;
-    globalEnv.TPP_OAUTH_CALLBACK_URL_ACCOUNTS = envVars.TPP_OAUTH_CALLBACK_URL_ACCOUNTS;
-    globalEnv.JWT_SIGNATURE_KID = envVars.JWT_SIGNATURE_KID;
+  return globalEnv;
+};
 
-    const apiVars = dotenv.parse(fs.readFileSync(apiConfigPath));
-    globalEnv.OIDC_ACCESS_TOKEN_URL = apiVars.OIDC_ACCESS_TOKEN_URL;
-    globalEnv.PSD2_AIS_API_URL = apiVars.PSD2_AIS_API_URL;
-    globalEnv.OIDC_REDIRECT_URL = apiVars.OIDC_REDIRECT_URL;
-    globalEnv.OIDC_JWKS_URL = apiVars.OIDC_JWKS_URL;
+export const loadGlobalEnv = (): GlobalEnv => {
+  const env = process.env.APP_ENVIRONMENT;
+  if (!env) {
+    throw new Error('Missing APP_ENVIRONMENT variable.');
+  }
+  const appName = process.env.APP_NAME;
+  if (!appName) {
+    throw new Error('Missing APP_NAME variable.');
+  }
+  const hostEnv = process.env.HOST_ENV;
+  if (!hostEnv) {
+    throw new Error('Missing HOST_ENV variable.');
+  }
 
-    logger.info(`Loaded configurations ${apiConfigPath} and ${envConfigPath}`);
+  const isProdPublic = process.env.APP_NAME === 'oop-tpp-demo-app-public';
+  const envConfigSuffix = process.env.HOST_ENV === 'aws' ? 'aws' : 'localhost';
+  const envConfigPath = `env/${isProdPublic ? 'prod-public' : env}.${envConfigSuffix}`;
+  const apiConfigPath = `env/${isProdPublic ? 'prod-public' : env}.apis`;
 
-    await loadSecrets(secretsConfigPath);
+  const apiVars = dotenv.parse(fs.readFileSync(apiConfigPath));
+  const envVars = dotenv.parse(fs.readFileSync(envConfigPath));
+  logger.info(`Loaded configurations ${apiConfigPath} and ${envConfigPath}`);
 
-    return globalEnv;
+  return {
+    PSD2_AIS_API_URL: apiVars.PSD2_AIS_API_URL,
+    PSD2_COF_API_URL: apiVars.PSD2_COF_API_URL,
+    OIDC_ACCESS_TOKEN_URL: apiVars.OIDC_ACCESS_TOKEN_URL,
+    OIDC_REDIRECT_URL: apiVars.OIDC_REDIRECT_URL,
+    OIDC_JWKS_URL: apiVars.OIDC_JWKS_URL,
+    PSD2_PIS_API_URL: apiVars.PSD2_PIS_API_URL,
+    LOGIN_SERVICE_URL: apiVars.LOGIN_SERVICE_URL,
+    PIS_JWKS_URI: apiVars.PIS_JWKS_URI,
+
+    TPP_NAME: envVars.TPP_NAME,
+    TPP_OAUTH_CALLBACK_URL: envVars.TPP_OAUTH_CALLBACK_URL,
+    TPP_OAUTH_CALLBACK_URL_ACCOUNTS: envVars.TPP_OAUTH_CALLBACK_URL_ACCOUNTS,
+    TPP_OAUTH_CALLBACK_URL_PAYMENTS: envVars.TPP_OAUTH_CALLBACK_URL_PAYMENTS,
+    TPP_OAUTH_CALLBACK_URL_CONFIRMATION_OF_FUNDS: envVars.TPP_OAUTH_CALLBACK_URL_CONFIRMATION_OF_FUNDS,
+    JWT_SIGNATURE_KID: envVars.JWT_SIGNATURE_KID,
+
+    APP_ENVIRONMENT: env,
+    APP_NAME: appName,
+    HOST_ENV: hostEnv,
+
+    CLIENT_CERTIFICATE: fs.readFileSync(`certs/client-cert/${isProdPublic ? 'prod-public' : env}/client.crt`, 'utf8'),
+    CLIENT_PRIVATE_KEY: fs.readFileSync(`certs/client-cert/${isProdPublic ? 'prod-public' : env}/key.pem`, 'utf8'),
+  };
+};
+
+export const unsetGlobalHttpProxySettings = () => {
+    delete process.env.HTTP_PROXY;
+    delete process.env.HTTPS_PROXY;
 };
 
 /** Create a https.Agent that is configured to use the
@@ -112,12 +155,9 @@ export const loadConfiguration = async (env: string, host: string) => {
  * a mutual TLS connection.
  */
 export const createConfiguredClient = () => {
-  const env = process.env.APP_ENVIRONMENT;
-  const clientCertPath = `certs/client-cert/${env}/client.crt`;
-  const clientKeyPath = `certs/client-cert/${env}/key.pem`;
   const httpsAgent = new https.Agent({
-    cert: fs.readFileSync(clientCertPath),
-    key: fs.readFileSync(clientKeyPath),
+    cert: getEnv().CLIENT_CERTIFICATE,
+    key: getEnv().CLIENT_PRIVATE_KEY,
     passphrase: getSecrets().CERT_PASSPHRASE,
     rejectUnauthorized: true,
   });

@@ -32,6 +32,22 @@ npm install -g aws-cdk
 Location for `server.crt` and `server.key` is `certs/localhost-server`.
 
 - Register and generate PSD2 certificates for MTLS and SSA signing
+- Register and generate PSD2 certificates for MTLS and SSA signing (see https://github.com/op-developer/psd2-registration-example).
+
+NOTE: for node.js applications, you will need to convert the ssa-signing-key.pem to other format:
+
+Extract the EC jwk from privatejwks.json and convert it e.g. like this:
+
+```bash
+const jwkToPem = require('jwk-to-pem');
+const fs = require('fs');
+
+const jwk = fs.readFileSync('jwk.json').toString();
+
+const pem = jwkToPem(JSON.parse(jwk), {private: true});
+
+console.log(pem);
+```
 
 Place certificates to `certs/client-cert/psd2-sandbox-prod/client.crt`, `certs/client-cert/psd2-sandbox-prod/key.pem` and `certs/client-cert/psd2-sandbox-prod/ssa-signing-key.pem`.
 

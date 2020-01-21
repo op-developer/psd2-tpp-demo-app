@@ -2,21 +2,29 @@ extends layout
 
 block content
   h2 #{tppName}
-  .container-flex-start.opux-alert-notification
-    i(class='opux-icon opux-icon-alert')
-    span(class='mXS-top truncate-container') You can choose one of the PSD2 Sandbox test users: 88888881 or 88888882. Password is 1122.
+  if env != 'prod' && env != 'psd2-sandbox' && env != 'cloudauthprod'
+    .container-flex-start.opux-alert-notification
+      i(class='opux-icon opux-icon-alert')
+      if env == 'dev' || env == 'cloudauthdev'
+        span(class='mXS-top truncate-container') You can choose one of our test users for KEHI 10344540 / 69258606 / 41210898 / 31784251 (long list of transactions)
+      else if env == 'psd2-sandbox-test'
+        span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox testing environment 88888881 / 88888882
+      else if env == 'psd2-sandbox-prod'
+        span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox prod environment 88888881 / 88888882
+      else if env == 'test' || env == 'cloudauthtest'
+        span(class='mXS-top truncate-container') You can choose one of our test users for JTY 77637996 / 17866149 / 22573903 / 69191576 / (11762501 / 2501 / 1122) / 94532111 (PSD2 Team's mobile key user)
+      else
+        span Press the button to continue
   form(method='post' action=`/accounts/createAuthorization` id='loginForm')
 
     .buttons
-      p
-      p Press the button to continue
       button(type='submit' id='submit' class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Proceed to authorization
 
     h3 Select authorization targets
 
     .container-flex-start.opux-alert-notification
       i(class='opux-icon opux-icon-alert')
-      span(class='mXS-top truncate-container') These options are not displayed to end users in real-life applications. They demonstrate different technical options TPP's have available.
+      span(class='mXS-top truncate-container') These options are <b>not displayed</b> to end users in real-life applications. They demonstrate different technical options TPP's have available.
 
     h3 Try out transaction range authorization (Checking TransactionRange causes authorization days to be ignored)
     p
@@ -33,7 +41,6 @@ block content
 
     h3 How long is the authorization valid (This value is ignored if TransactionRange is selected)
     select(name='authorizationDays' class='opux-input-select' form='loginForm')
-        option(value='0') Once
         option(value='1') One day
         option(value='7') One week
         option(value='14') Two weeks

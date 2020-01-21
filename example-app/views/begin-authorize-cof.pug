@@ -1,0 +1,39 @@
+extends layout
+
+block content
+  h2 #{tppName}
+  if env != 'prod' && env != 'psd2-sandbox'
+    .container-flex-start.opux-alert-notification
+      i(class='opux-icon opux-icon-alert')
+      if env == 'dev' || env == 'cloudauthdev'
+        span(class='mXS-top truncate-container') You can choose one of our test users for KEHI 10344540 / 69258606 / 41210898 / 31784251 (long list of transactions)
+      else if env == 'psd2-sandbox-test'
+        span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox testing environment 88888881 / 88888882
+      else if env == 'psd2-sandbox-prod'
+        span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox prod environment 88888881 / 88888882
+      else if env == 'test' || env == 'cloudauthtest'
+        span(class='mXS-top truncate-container') You can choose one of our test users for JTY 77637996 / 17866149 / 22573903 / 69191576 / (11762501 / 2501 / 1122)
+  form(method='post' action=`/cof/createAuthorization` id='loginForm')
+
+    .buttons
+      p
+      p Press the button to continue
+      button(type='submit' id='submit' class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Proceed to authorization
+
+    h3 Select authorization targets
+
+    .container-flex-start.opux-alert-notification
+      i(class='opux-icon opux-icon-alert')
+      span(class='mXS-top truncate-container') These options are not displayed to end users in real-life applications. They demonstrate different technical options TPP's have available.
+
+    h3 IBAN of the account that you want to authorize for confirmation of funds (Optional)
+    p
+      input(type='text' value=initialIban name='cofIban' id='cofIban' form='loginForm')
+      label(for='cofIban') CofIban
+
+    h3 Date when authorization will expire, cannot be more than one year (Optional)
+    p
+      input(type='text' value=initialExpires name='cofExpires' id='cofExpires' form='loginForm')
+      label(for='cofExpires') Expires
+
+    .opux-loading

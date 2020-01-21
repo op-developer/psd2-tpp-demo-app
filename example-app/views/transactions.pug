@@ -23,7 +23,7 @@ block content
                 .container-flex.width100.pXS
                     span(class='transaction-date flex-shrink-0  bodytext') #{val.date}
                     .name-truncate.mAuto-right.link #{val.label}
-                    .opux-nowrap.bodytext #{val.amount} e
+                    .opux-nowrap.bodytext #{val.amount} #{val.currency}
 
         if nextPageLink
             a(class='container-flex-space-between bodytext' id=`transaction-next-page` href=`${nextPageLink}` onclick='javascript:document.body.classList.add(\'in-progress\')')

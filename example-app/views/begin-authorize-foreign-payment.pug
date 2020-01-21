@@ -1,0 +1,85 @@
+extends layout
+
+block content
+  h3 Create a foreign payment to authorize:
+
+  form(method='post' action=`/payments/createForeignPaymentAuthorization` id='foreignPayment')
+
+    p
+        input(type='text' name='paymentAmount' id='paymentAmount' class='opux-input' maxlength="10" form='foreignPayment' pattern="^[0-9]+([\.\,][0-9]{1,2})?$")
+        label(for='paymentAmount') Payment amount in decimal format, e.g. 1.2
+    p
+        select(name='paymentCurrency' class='opux-input-select' form='foreignPayment')
+            option(value='EUR' selected) Euro
+            option(value='AED') Yhdistyneiden arabiemiirikuntien dirhami
+            option(value='AUD') Australian dollari
+            option(value='ZAR') Etelä-Afrikan rand
+            option(value='HKD') Hongkongin dollari
+            option(value='INR') Intian rupia
+            option(value='GBP') Englannin punta
+            option(value='ILS') Uusi Israelin sekeli
+            option(value='JPY') Japanin jeni
+            option(value='CAD') Kanadan dollari
+            option(value='HRK') Kroatian kuna
+            option(value='KWD') Kuwaitin dinaari
+            option(value='MAD') Marokon dirham
+            option(value='MXN') Meksikon peso
+            option(value='NOK') Norjan kruunu
+            option(value='PLN') Puolan zloty
+            option(value='RON') Romanian leu
+            option(value='SEK') Ruotsin kruunu
+            option(value='SAR') Saudi-Arabian rial
+            option(value='SGD') Singaporen dollari
+            option(value='CHF') Sveitsin frangi
+            option(value='DKK') Tanskan kruunu
+            option(value='THB') Thaimaan Baht
+            option(value='CZK') Tšekin koruna
+            option(value='TND') Tunisian dinaari
+            option(value='TRY') Turkin liira
+            option(value='HUF') Unkarin forintti
+            option(value='NZD') Uuden-Seelannin dollari
+            option(value='RUB') Venäjän rupla
+            option(value='USD') Yhdysvaltain dollari
+    p
+        input(type='text' name='payeeName' id='payeeName' class='opux-input'  maxlength="50" form='foreignPayment')
+        label(for='payeeName') Payee name
+
+    h3 Payee Address Information
+    p
+        input(type='text' name='payeeAddr1' id='payeeAddr1' class='opux-input'  maxlength="50" form='foreignPayment')
+        label(for='payeeAddr1') Payee address line 1
+    p
+        input(type='text' name='payeeAddr2' id='payeeAddr2' class='opux-input'  maxlength="50" form='foreignPayment')
+        label(for='payeeAddr2') Payee address line 2
+    p
+        input(type='text' name='payeeCountry' id='payeeCountry' class='opux-input'  maxlength="50" form='foreignPayment')
+        label(for='payeeCountry') Payee country. For example, FI, GB, HK or US
+
+    h3 Payee Account Information
+    p
+        select(name='payeeAccountScheme' class='opux-input-select' form='foreignPayment')
+            option(value='BBAN' selected) BBAN
+            option(value='IBAN') IBAN
+        label(for='payeeAccountScheme') Payee Account Scheme
+    p
+        input(type='text' name='payeeAccountId' id='payeeAccountId' class='opux-input' maxlength="30" form='foreignPayment')
+        label(for='payeeAccountId') Account id of payee, e.g. 00360305000010009795493P1
+    p
+        input(type='text' name='payeeAccountIssuer' id='payeeAccountIssuer' class='opux-input' maxlength="30" form='foreignPayment')
+        label(for='payeeAccountIssuer') Payee Account Issuer, e.g. SHANGHAI BANKING CORPORATION
+    p
+        input(type='text' name='payeeBic' id='payeeBic' class='opux-input' maxlength="19" form='foreignPayment')
+        label(for='payeeBic') Payee BIC, e.g. HSBCHKHHHKH
+    p
+        input(type='text' name='message' id='message' class='opux-input'  maxlength="100" form='foreignPayment')
+        label(for='message') Payment message
+    p
+        input(type='text' name='bundlePaymentCount' id='bundlePaymentCount' class='opux-input'  maxlength="2" form='foreignPayment' value='1')
+        label(for='bundlePaymentCount') Bundle payment size (1-9)
+
+    .buttons
+      p
+      p Press the button to continue
+      button(type='submit' id='submit' class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Proceed to authorization
+
+    .opux-loading

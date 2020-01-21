@@ -5,7 +5,6 @@ import {
   IdentifierScheme,
   AisInterface,
   Transaction,
-  Currency,
   CardTransaction,
   Account,
 } from '../models/accountInformation';
@@ -26,7 +25,7 @@ const getTransactionLabel = (transaction: accounts.Transaction) => {
 const mapAccountToGeneric = (account: accounts.Account): Account => {
   return {
     accountId: account.accountId,
-    currency: Currency.Euro,
+    currency: account.currency,
     productName: account.productName,
     identifier: account.identifier,
     identifierScheme: IdentifierScheme.Iban,
@@ -38,7 +37,7 @@ const mapCardTransactionToGeneric = (transaction: accounts.CardTransaction): Car
   return {
     description: transaction.description,
     amount: transaction.amount,
-    currency: Currency.Euro,
+    currency: transaction.currency,
     postingDate: transaction.postingDate,
   };
 };
@@ -48,6 +47,7 @@ const mapTransactionToGeneric = (transaction: accounts.Transaction): Transaction
     transactionId: transaction.archiveId,
     date: transaction.valueDate ? new Date(transaction.valueDate) : undefined,
     amount: transaction.amount,
+    currency: transaction.currency,
     label: getTransactionLabel(transaction),
     proprietaryTransactionCode: transaction.proprietaryTransactionDescription,
     recipient: transaction.recipient && transaction.recipient.name,
