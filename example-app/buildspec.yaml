@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+
+  pre_build:
+    commands:
+    - $(aws ecr get-login --no-include-email)
+    - IMAGE_TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+  build:
+    commands:
+    - docker build --no-cache -t $ECR_REPOSITORY:latest .
+    - docker tag $ECR_REPOSITORY:latest $ECR_REPOSITORY:$IMAGE_TAG
+    - docker tag $ECR_REPOSITORY:latest $ECR_REPOSITORY:psd2-sandbox-test
+
+  post_build:
+    commands:
+    - docker push $ECR_REPOSITORY:latest
+    - docker push $ECR_REPOSITORY:$IMAGE_TAG
+    - docker push $ECR_REPOSITORY:psd2-sandbox-test
+    - echo Writing image definitions file...
+    - printf '[{"name":"main","imageUri":"%s"}]' $ECR_REPOSITORY:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+    files: imagedefinitions.json

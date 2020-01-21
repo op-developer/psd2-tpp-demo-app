@@ -7,23 +7,40 @@ import lusca from 'lusca';
 import path from 'path';
 
 import * as oauthControllerAccounts from '../controllers-ais/oauthController';
+import * as oauthControllerPayments from '../controllers-pis/oauthController';
+import * as oauthControllerConfirmationOfFunds from '../controllers-cof/oauthController';
 
 import * as beginAuthorizeController from '../controllers-ais/beginAuthorizeController';
 import * as accountController from '../controllers-ais/accountController';
+import * as cardController from '../controllers-ais/cardController';
 import * as transactionController from '../controllers-ais/transactionController';
 import * as createAccountAuthorizationController from '../controllers-ais/createAuthorizationController';
 
-import { createInterfacesToSessions, requireSession, getSessions } from '../services/session';
-import { getSecrets, loadConfiguration } from './config';
-import { verifyOauthSession } from '../services/oauthHandler';
+import * as beginPaymentsController from '../controllers-pis/beginPaymentsController';
+import * as createPaymentAuthorizationController from '../controllers-pis/createPaymentAuthorizationController';
+import * as submitPaymentController from '../controllers-pis/submitPaymentController';
+import * as listAuthorizedController from '../controllers-pis/listAuthorizedController';
+import * as cofController from '../controllers-cof/cofController';
 
-const createApp = async (envStr: string, host: string) => {
+import {
+    createInterfacesToSessions,
+    requireSession,
+    getSessions,
+} from '../services/session';
+import {
+    getSecrets,
+    loadConfiguration,
+    unsetGlobalHttpProxySettings,
+} from './config';
+import { verifyOauthSession } from '../services/oauthHandler';
+import { handleErrors } from './errorHandler';
+
+const createApp = async () => {
     const app = express();
-    process.env.APP_ENVIRONMENT = envStr;
-    process.env.HOST_ENV = host;
+    unsetGlobalHttpProxySettings();
     app.set('port', process.env.PORT || 8181);
     app.set('host', process.env.HOST || '');
-    await loadConfiguration(envStr, host);
+    await loadConfiguration();
 
     // Express configuration
     app.set('views', path.join(__dirname, '../../views'));
@@ -64,16 +81,50 @@ const createApp = async (envStr: string, host: string) => {
     // Accounts
     app.get('/accounts/authorize', beginAuthorizeController.beginAuthorize);
     app.post('/accounts/createAuthorization', createAccountAuthorizationController.postCreateAuthorization);
-    app.get('/accounts', createInterfacesToSessions, accountController.renderAccounts);
+    app.post('/accounts/removeAuthorization', createAccountAuthorizationController.postRemoveAuthorization);
+    app.post('/accounts/revokeAuthorization', createAccountAuthorizationController.postRevokeAuthorization);
+    app.get('/accounts', createInterfacesToSessions, handleErrors(accountController.renderAccounts));
     app.get('/accounts/:authorizationId/:accountId',
-        requireSession, createInterfacesToSessions, accountController.renderAccount);
+        requireSession, createInterfacesToSessions, handleErrors(accountController.renderAccount));
     app.get('/accounts/transactions/:authorizationId/:accountId',
-        requireSession, createInterfacesToSessions, transactionController.renderTransactions);
+        requireSession, createInterfacesToSessions, handleErrors(transactionController.renderTransactions));
     app.get('/accounts/transaction/:authorizationId/:accountId',
-        requireSession, createInterfacesToSessions, transactionController.renderTransaction);
+        requireSession, createInterfacesToSessions, handleErrors(transactionController.renderTransaction));
 
     // OAuth callbacks
     app.get('/oauth/access_token/accounts', verifyOauthSession, oauthControllerAccounts.getAccessToken);
+    app.get('/oauth/access_token/payments', verifyOauthSession, oauthControllerPayments.getAccessToken);
+    app.get(
+        '/oauth/access_token/confirmation_of_funds',
+        verifyOauthSession,
+        oauthControllerConfirmationOfFunds.getAccessToken,
+    );
+
+    app.get('/cards',
+        requireSession, createInterfacesToSessions, handleErrors(cardController.renderCards));
+    app.get('/cards/:authorizationId/:cardId',
+        requireSession, createInterfacesToSessions, handleErrors(cardController.renderCard));
+    app.get('/cards/transactions/:authorizationId/:cardId',
+        requireSession, createInterfacesToSessions, handleErrors(cardController.renderCardTransactions));
+    app.get('/cards/transaction/:authorizationId/:cardId',
+        requireSession, createInterfacesToSessions, handleErrors(cardController.renderCardTransaction));
+
+    app.get('/payments', listAuthorizedController.listAuthorizedPayments);
+    app.get('/payments/select-type', beginPaymentsController.selectPaymentType);
+    app.get('/payments/begin-authorize', beginPaymentsController.beginAuthorize);
+    app.get('/payments/begin-authorize-foreign-payment',
+        beginPaymentsController.beginAuthorizeForeign);
+    app.post('/payments/createAuthorization',
+        createPaymentAuthorizationController.createPaymentToAuthorize);
+    app.post('/payments/createForeignPaymentAuthorization',
+        createPaymentAuthorizationController.createForeignPaymentToAuthorize);
+    app.post('/payments/submit',
+        requireSession, submitPaymentController.submitAuthorizedPayments);
+
+    app.get('/cof', cofController.renderFundsConfirmationView);
+    app.get('/cof/authorize', cofController.renderAuthorizationStartView);
+    app.post('/cof/createAuthorization', cofController.createCofAuthorization);
+    app.post('/cof/do-funds-confirmation', requireSession, cofController.doFundsConfirmation);
 
     // Health check end points for monitoring
     app.get('/health-check', (_, res) => res.sendStatus(200).end());

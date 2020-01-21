@@ -1,0 +1,54 @@
+extends layout
+
+block content
+  h3 Create a new SEPA payment
+
+  form(method='post' action=`/payments/createAuthorization` id='loginForm')
+    if accessToken && expirationDate
+      p
+        span Use existing access token for exemption:
+        p
+          input#accessToken(type='checkbox', name='accessToken', value=accessToken, checked=false onclick='togglePayerInput()')
+          span token expires at: #{expirationDate}
+          script.
+            function togglePayerInput(){
+              if (document.getElementById('accessToken').checked) {
+                document.getElementById('payer').classList.remove('opux-is-hidden');
+              }
+              else {
+                document.getElementById('payer').classList.add('opux-is-hidden');
+              }
+            }
+    p
+      input(type='text' placeholder='1.50' name='paymentAmount' id='paymentAmount' class='opux-input' maxlength='10' form='loginForm' pattern='^[0-9]+([\.\,][0-9]{1,2})?$')
+      label(for='paymentAmount') Payment amount (EUR) in decimal format (maximum two decimals)
+    
+    p#payer.opux-is-hidden
+      input(type='text' name='payerAccount' id='payerAccount' class='opux-input' maxlength='50' form='loginForm')
+      label(for='payerAccount') IBAN of payer (exemption case only), e.g. FI12 5841 0220 1898 33
+    p
+      input(type='text' placeholder='FI21 1234 5600 0007 85' name='payeeAccount' id='payeeAccount' class='opux-input' maxlength='30' form='loginForm')
+      if env == 'test'
+        label(for='payeeAccount') IBAN of receiver, e.g. FI6059986920080595 / FI6859986920189867 / FI7259986920206091
+      else if env == 'dev'
+        label(for='payeeAccount') IBAN of receiver, e.g. FI8259995020143575 / FI6059995020143583 / FI3859995020143591
+      else
+        label(for='payeeAccount') IBAN of receiver
+    p
+      input(type='text' name='payeeName' id='payeeName' class='opux-input' maxlength='50' form='loginForm')
+      label(for='payeeName') Name of the receiver
+    p
+      input(type='text' name='message' id='message' class='opux-input' maxlength='100' form='loginForm')
+      label(for='message') Message for the payment
+    p
+      input(type='text' name='bundlePaymentCount' id='bundlePaymentCount' class='opux-input'  maxlength='2' form='loginForm' value='1')
+      label(for='bundlePaymentCount') Specify the number of payments for bundle payment
+    p
+      input(type='text' name='recurringPaymentCount' id='recurringPaymentCount' class='opux-input'  maxlength='2' form='loginForm' value='1')
+      label(for='recurringPaymentCount') Specify the number of payments for recurring payment
+
+    .buttons
+      p
+      button(type='submit' id='submit' class='opux-btn opux-btn-primary') Proceed to authorize the payment
+
+    .opux-loading

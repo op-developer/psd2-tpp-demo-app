@@ -1,0 +1,58 @@
+extends layout
+
+block content
+  .page-header
+      if authorizations.length > 0
+        h3 Authorized Payments
+             .card
+                each authorization, index in authorizations
+                  if authorization.payments.length > 0
+                    form(method='post' action=`/payments/submit` id=`paymentSubmissionForm_${index}`)
+                      h4 Authorization: #{authorization.payments[0].authorizationId}
+                      input(type="hidden", name="authorizationId", value=authorization.payments[0].authorizationId form=`paymentSubmissionForm_${index}`)
+                      table(class="opux-table")
+                        thead
+                          tr
+                            th Select for submission
+                            th Payment Details
+                            th Message
+                            th Status
+                        tbody
+                          each row, index2 in authorization.payments
+                            tr
+                                if row.status == 'Completed'
+                                    td Paid
+                                else if row.status == 'Authorized'
+                                    td(class=`authorized-payment-${index2}` text=row.paymentId)
+                                      input(type='checkbox' name='selectedPayment[]' value=row.paymentId class='opux-input'  maxlength="50" form=`paymentSubmissionForm_${index}`)
+                                else
+                                    td !
+                                td
+                                    ul
+                                        li Payer iban: #{row.payer.iban}
+                                        if row.paymentType == 'ForeignPayment'
+                                          li Payee account: #{row.payee.bankAccount.id}
+                                          li Amount: #{row.amount} #{row.currency}
+                                        else
+                                          li Payee iban: #{row.payee.iban}
+                                          li Amount: #{row.amountEUR} EUR
+                                td #{row.message}
+                                td #{row.status}
+
+                      if authorization.authorizedCount > 0
+                        .buttons
+                        p
+                        p Press the button to submit selected payments
+                        button(type='submit' id='submit' form=`paymentSubmissionForm_${index}` class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Submit selected payments
+
+                        .opux-loading
+
+  h2 Proceed to make a new authorization
+  p.
+    This is a demo application that shows how TPP would ask user to authorize payments.
+  p.
+    Select the bank you want to use for authorization.
+  p
+    ul
+      li
+        include partials/tupas
