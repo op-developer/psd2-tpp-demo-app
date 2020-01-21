@@ -5,13 +5,9 @@ export enum IdentifierScheme {
   Iban = 'Iban',
 }
 
-export enum Currency {
-  Euro = 'EUR',
-}
-
 export interface Account {
   accountId: string;
-  currency: Currency;
+  currency: string;
   productName: string;
   identifier: string;
   identifierScheme: IdentifierScheme;
@@ -20,6 +16,7 @@ export interface Account {
 
 export interface Transaction {
   transactionId?: string;
+  currency?: string;
   date?: Date;
   amount?: string;
   label?: string;
@@ -43,7 +40,7 @@ export interface Card {
 export interface CardTransaction {
   description?: string;
   amount?: string;
-  currency?: Currency;
+  currency?: string;
   postingDate?: string;
 }
 

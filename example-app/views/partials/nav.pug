@@ -1,3 +1,5 @@
 nav.navi-big
-    a(href='/accounts' class='navigation-top selected') Accounts
-    a(href='/logout' class='navigation-top') Log out
+    a(href='/accounts' class=`navigation-top ${title == 'Accounts' || title == 'Account info' || title == 'Start account authorization' || title == 'Transactions' || title == 'Transaction information' ? 'selected' : ''}`) Accounts
+    a(href='/cards' class=`navigation-top ${title == 'Cards' || title == 'Card Information' || title == 'Card Transactions' || title == 'Card Transaction Information' ? 'selected' : ''}`) Cards
+    a(href='/payments' class=`navigation-top ${title == 'Authorized Payments' || title == 'Select payment type' || title == 'Start payment authorization' ? 'selected' : ''}`) Payments
+    a(href='/cof' class=`navigation-top ${title == 'Confirmation of Funds' ? 'selected' : ''}` title='Confirmation of Funds') CoF

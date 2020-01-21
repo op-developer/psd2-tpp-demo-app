@@ -1,3 +1,4 @@
+import '../util/tracer';
 import express from 'express';
 import createApp from './app';
 import { logger } from '../services/logger';
@@ -25,9 +26,8 @@ const configureServer = (useSsl: boolean, app: express.Express) => {
     app.listen(app.get('port'), app.get('host'), () => logLine(app, useSsl));
 };
 
-const server = createApp(
-  process.env.APP_ENVIRONMENT || 'test',
-  process.env.HOST_ENV || 'localhost')
-  .then((app) => configureServer(process.env.HOST_ENV !== 'aws', app));
+const server = createApp()
+  .then((app) =>
+    configureServer(process.env.HOST_ENV !== 'aws' && process.env.APP_ENVIRONMENT !== 'psd2-sandbox-test', app));
 
 export default server;

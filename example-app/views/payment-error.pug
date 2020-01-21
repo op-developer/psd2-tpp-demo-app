@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  .page-header
+    .opux-g-row
+      .opux-g-col-s-12
+        .opux-alert.opux-alert-error.error-comp
+            .opux-alert-icon
+              i(class="opux-icon opux-icon-error")
+            .opux-alert-body
+              h2 #{errorTitle}
+              p #{errorText}
+        a(href='/payments' class='navigation') Return to Payments

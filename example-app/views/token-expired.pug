@@ -1,0 +1,12 @@
+extends layout
+
+block content
+    h2 #{tppName}
+  form(method='get' action=`/logout` id='tokenForm')
+    h3 Access Token expired
+
+    .opux-loading
+
+    .buttons
+      p Press the button to log out.
+      button(type='submit' class='opux-btn opux-btn-primary' onclick='javascript:document.body.classList.add(\'in-progress\')') Log out

@@ -10,3 +10,5 @@ junit.xml
 .idea
 .DS_Store
 .secrets
+.secrets
+env/
