@@ -1,51 +1,91 @@
 import dotenv from 'dotenv';
 import https from 'https';
 import * as fs from 'fs';
-import { logger } from '../services/logger';
+import { logger, configureLogLevel } from '../services/logger';
 import { getSsmParameters } from '../services/ssmParams';
 
-// The global environment holder
-const globalEnv = {
-    TPP_NAME: 'Default TPP name',
-    JWT_SIGNATURE_KID: '',
-    OIDC_ACCESS_TOKEN_URL: '',
-    PSD2_AIS_API_URL: '',
-    TPP_OAUTH_CALLBACK_URL_ACCOUNTS: '',
-    OIDC_REDIRECT_URL: '',
-    OIDC_JWKS_URL: '',
-};
-// The global secrets holder
-const globalSecrets = {
-    API_KEY: '',
-    CERT_PASSPHRASE: '',
-    SESSION_SECRET: '',
-    TPP_CLIENT_ID: '',
-    TPP_CLIENT_SECRET: '',
-};
+interface GlobalEnv {
+  PSD2_AIS_API_URL: string;
+  PSD2_COF_API_URL: string;
+  OIDC_ACCESS_TOKEN_URL: string;
+  OIDC_REDIRECT_URL: string;
+  OIDC_JWKS_URL: string;
+  PSD2_PIS_API_URL: string;
+  LOGIN_SERVICE_URL: string;
+  PIS_JWKS_URI: string;
+
+  // From config
+  TPP_NAME: string;
+  TPP_OAUTH_CALLBACK_URL: string;
+  TPP_OAUTH_CALLBACK_URL_ACCOUNTS: string;
+  TPP_OAUTH_CALLBACK_URL_PAYMENTS: string;
+  TPP_OAUTH_CALLBACK_URL_CONFIRMATION_OF_FUNDS: string;
+  JWT_SIGNATURE_KID: string;
+
+  APP_ENVIRONMENT: string;
+  APP_NAME: string;
+  HOST_ENV: string;
+
+  CLIENT_CERTIFICATE: string;
+  CLIENT_PRIVATE_KEY: string;
+}
+
+let globalEnv: GlobalEnv;
+
+interface GlobalSecrets {
+    API_KEY: string;
+    CERT_PASSPHRASE: string;
+    SESSION_SECRET: string;
+    TPP_CLIENT_ID: string;
+    TPP_CLIENT_SECRET: string;
+}
+
+let globalSecrets: GlobalSecrets;
 
 /** Get the global environment variables. */
-export const getEnv = () => globalEnv;
+export const getEnv = () => {
+  if (!globalEnv) {
+    globalEnv = loadGlobalEnv();
+  }
+  return globalEnv;
+};
+
 /** Get the global secrets variables. */
-export const getSecrets = () => globalSecrets;
+export const getSecrets = () => {
+  if (!globalSecrets) {
+    throw new Error('loadSecrets before calling getSecrets!');
+  }
+  return globalSecrets;
+};
 
-const appName = 'psd2-sandbox-demo';
-const serviceName = 'psd2-tpp-demo-app';
+/** Used only in tests. */
+export const setEnv = (env: any) => globalEnv = env;
 
-export const loadSsmParams = async (region: string) => {
-    const ssmPath = `/${appName}/${process.env.APP_ENVIRONMENT}/${serviceName}`;
-    const params: any = await getSsmParameters(ssmPath, region);
-    globalSecrets.API_KEY = params.API_KEY;
-    globalSecrets.CERT_PASSPHRASE = params.CERT_PASSPHRASE;
-    globalSecrets.SESSION_SECRET = params.SESSION_SECRET;
-    globalSecrets.TPP_CLIENT_ID = params.TPP_CLIENT_ID;
-    globalSecrets.TPP_CLIENT_SECRET = params.TPP_CLIENT_SECRET;
-    if (globalSecrets.API_KEY === undefined ||
-        globalSecrets.CERT_PASSPHRASE === undefined ||
-        globalSecrets.SESSION_SECRET === undefined ||
-        globalSecrets.TPP_CLIENT_ID === undefined ||
-        globalSecrets.TPP_CLIENT_SECRET === undefined) {
-            throw Error(`Could not find all parameters in ${ssmPath} in ${region}`);
-    }
+export const prodPublic = () => {
+  return getEnv().APP_NAME === 'oop-tpp-demo-app-public';
+};
+
+const loadSecretsFromSsm = async () => {
+  const region = selectRegion();
+  const ssmPath = `/${getEnv().APP_NAME === 'psd2-tpp-demo-app' ? 'psd2-sandbox-demo' : 'psd2'}/${getEnv().APP_ENVIRONMENT}/${getEnv().APP_NAME}`;
+  const params = await getSsmParameters(ssmPath, region);
+
+  const secrets = {
+    API_KEY: params.API_KEY,
+    CERT_PASSPHRASE: params.CERT_PASSPHRASE,
+    SESSION_SECRET: params.SESSION_SECRET,
+    TPP_CLIENT_ID: params.TPP_CLIENT_ID,
+    TPP_CLIENT_SECRET: params.TPP_CLIENT_SECRET,
+  };
+  if (!secrets.API_KEY ||
+    !secrets.CERT_PASSPHRASE ||
+    !secrets.SESSION_SECRET ||
+    !secrets.TPP_CLIENT_ID ||
+    !secrets.TPP_CLIENT_SECRET) {
+    throw new Error(`Could not find all parameters in ${ssmPath} in ${region}`);
+  }
+  logger.info(`Loaded ${Object.keys(secrets).length} secrets from SSM in ${region}`);
+  return secrets;
 };
 
 /** Returns true if the app is running in production mode. */

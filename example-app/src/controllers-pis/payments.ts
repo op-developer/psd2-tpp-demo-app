@@ -75,7 +75,7 @@ export const createSinglePayment = async (
     const response = await initSinglePayment(accessToken, sessionId, sepaPaymentRequest);
     if (!response.ok) {
         const errBody = await response.json();
-        logger.error(`Received following error from payments: ${errBody}`);
+        logger.error(`Received following error from payments: ${JSON.stringify(errBody)}`);
         const paymentError: PaymentErrorPayload = {
             httpCode: response.status,
             errorDescription: constructPaymentErrorMessage(errBody),
