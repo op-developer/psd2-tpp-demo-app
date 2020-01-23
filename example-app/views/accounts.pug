@@ -43,13 +43,3 @@ block content
         li
           include partials/tupas
 
-    if env != 'prod' && env != 'psd2-sandbox'
-      .container-flex-start.opux-alert-notification
-        i(class='opux-icon opux-icon-alert')
-        span(class='mXS-top truncate-container')
-          p
-            a(href=`${intentLink}` style='text-decoration: underline') Click here
-            span &nbsp;to view any intents that have been used in the active session.
-          p
-            a(href=`https://tpp-registry-ui-${env}.psd2.aws.op-palvelut.net` style='text-decoration: underline') Go to the TPP Registry browser
-

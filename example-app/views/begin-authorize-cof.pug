@@ -5,14 +5,9 @@ block content
   if env != 'prod' && env != 'psd2-sandbox'
     .container-flex-start.opux-alert-notification
       i(class='opux-icon opux-icon-alert')
-      if env == 'dev' || env == 'cloudauthdev'
-        span(class='mXS-top truncate-container') You can choose one of our test users for KEHI 10344540 / 69258606 / 41210898 / 31784251 (long list of transactions)
-      else if env == 'psd2-sandbox-test'
-        span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox testing environment 88888881 / 88888882
-      else if env == 'psd2-sandbox-prod'
+      if env == 'psd2-sandbox-prod'
         span(class='mXS-top truncate-container') You can choose one of our test users for PSD2 Sandbox prod environment 88888881 / 88888882
-      else if env == 'test' || env == 'cloudauthtest'
-        span(class='mXS-top truncate-container') You can choose one of our test users for JTY 77637996 / 17866149 / 22573903 / 69191576 / (11762501 / 2501 / 1122)
+
   form(method='post' action=`/cof/createAuthorization` id='loginForm')
 
     .buttons

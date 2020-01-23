@@ -132,8 +132,9 @@ export const getSession = (req: Request, authorizationId: string) => {
 export const getLatestAccessToken = (req: Request): SessionTokenData | undefined => {
     const sessions = getSessions(req);
     const validSessions = sessions.filter((s) => s.tokens && new Date(s.tokens.expirationDate) > new Date());
-    console.log('[getLatestAccessToken()]: ', JSON.stringify(validSessions));
+    logger.info('[getLatestAccessToken()]: ', JSON.stringify(validSessions));
     return validSessions.length > 0 ?
+        // tslint:disable:max-line-length
         validSessions.sort((a, b) => (b.tokens ? new Date(b.tokens.expirationDate).getTime() : 0) - (b.tokens ? new Date(b.tokens.expirationDate).getTime() : 0))[0].tokens :
         undefined;
 };

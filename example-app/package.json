@@ -7,7 +7,7 @@
     "url": "https://github.com/op-developer/psd2-tpp-demo-app.git"
   },
   "author": "Markus Lindqvist",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "start": "cross-env APP_NAME=oop-tpp-demo-app HOST_ENV=localhost npm run serve",
     "start-aws": "HOST_ENV=aws APP_NAME=oop-tpp-demo-app npm run serve",
@@ -42,6 +42,7 @@
     "dotenv": "^8.2.0",
     "errorhandler": "^1.5.1",
     "express": "^4.17.1",
+    "jose": "^1.20.0",
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.6.0",
     "lusca": "^1.6.1",

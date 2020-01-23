@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import panva, { JWS, JWKS } from '@panva/jose';
+import panva, { JWS, JWKS } from 'jose';
 import { getEnv, getSecrets, prodPublic } from '../app/config';
 import { logger } from './logger';
 import fetch from 'node-fetch';

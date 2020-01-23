@@ -21,7 +21,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-thin.woff2) format('woff2'),
     url(../css/fonts/chevin-thin.woff) format('woff'),
     url(../css/fonts/chevin-thin.ttf) format('truetype');
@@ -30,7 +30,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-thinitalic.woff2) format('woff2'),
     url(../css/fonts/chevin-thinitalic.woff) format('woff'),
     url(../css/fonts/chevin-thinitalic.ttf) format('truetype');
@@ -39,7 +39,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-light.woff2) format('woff2'),
     url(../css/fonts/chevin-light.woff) format('woff'),
     url(../css/fonts/chevin-light.ttf) format('truetype');
@@ -48,7 +48,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-lightitalic.woff2) format('woff2'),
     url(../css/fonts/chevin-lightitalic.woff) format('woff'),
     url(../css/fonts/chevin-lightitalic.ttf) format('truetype');
@@ -57,7 +57,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-medium.woff2) format('woff2'),
     url(../css/fonts/chevin-medium.woff) format('woff'),
     url(../css/fonts/chevin-medium.ttf) format('truetype');
@@ -66,7 +66,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-mediumitalic.woff2) format('woff2'),
     url(../css/fonts/chevin-mediumitalic.woff) format('woff'),
     url(../css/fonts/chevin-mediumitalic.ttf) format('truetype');
@@ -75,7 +75,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-demibold.woff2) format('woff2'),
     url(../css/fonts/chevin-demibold.woff) format('woff'),
     url(../css/fonts/chevin-demibold.ttf) format('truetype');
@@ -84,7 +84,7 @@
 }
 
 @font-face {
-  font-family: Chevin;
+  font-family: Arial;
   src: url(../css/fonts/chevin-demibolditalic.woff2) format('woff2'),
     url(../css/fonts/chevin-demibolditalic.woff) format('woff'),
     url(../css/fonts/chevin-demibolditalic.ttf) format('truetype');
@@ -116,7 +116,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: Chevin, sans-serif, sans-serif;
+  font-family: Arial, sans-serif, sans-serif;
   color: #323232;
 }
 
