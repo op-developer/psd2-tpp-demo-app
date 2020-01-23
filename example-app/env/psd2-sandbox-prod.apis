@@ -1,4 +1,7 @@
 PSD2_AIS_API_URL=https://mtls-apis.psd2-sandbox.op.fi/accounts-psd2/v1
+PSD2_COF_API_URL=https://mtls-apis.psd2-sandbox.op.fi/confirmation-of-funds-psd2/v1
+PSD2_PIS_API_URL=https://mtls-apis.psd2-sandbox.op.fi/payments-psd2/v1
 OIDC_ACCESS_TOKEN_URL=https://mtls-apis.psd2-sandbox.op.fi/oauth/token
 OIDC_REDIRECT_URL=https://authorize.psd2-sandbox.op.fi/oauth/authorize
 OIDC_JWKS_URL=https://authorize.psd2-sandbox.op.fi/oauth/jwks/PSD2_OIDC
+PIS_JWKS_URI=https://sandbox.apis.op-palvelut.fi/psd2/sandbox/jwks/payments/jwks.json

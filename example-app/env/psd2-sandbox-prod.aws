@@ -1,3 +1,5 @@
-TPP_OAUTH_CALLBACK_URL_ACCOUNTS=https://example.successful-personal-finances.business/oauth/access_token/accounts
 TPP_NAME=Successful Personal Finances Oy
-JWT_SIGNATURE_KID=qeseal-MA5-HQ
+TPP_OAUTH_CALLBACK_URL_ACCOUNTS=https://example.successful-personal-finances.business/oauth/access_token/accounts
+TPP_OAUTH_CALLBACK_URL_PAYMENTS=https://example.successful-personal-finances.business/oauth/access_token/payments
+TPP_OAUTH_CALLBACK_URL_CONFIRMATION_OF_FUNDS=https://example.successful-personal-finances.business/oauth/access_token/confirmation_of_funds
+JWT_SIGNATURE_KID=UYM0ag
