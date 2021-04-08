@@ -67,7 +67,8 @@ export const prodPublic = () => {
 
 const loadSecretsFromSsm = async () => {
   const region = selectRegion();
-  const ssmPath = `/${getEnv().APP_NAME === 'psd2-tpp-demo-app' ? 'psd2-sandbox-demo' : 'psd2'}/${getEnv().APP_ENVIRONMENT}/${getEnv().APP_NAME}`;
+  const appGroup = process.env.APP_GROUP || 'psd2-sandbox-demo';
+  const ssmPath = `/${appGroup}/${getEnv().APP_ENVIRONMENT}/${getEnv().APP_NAME}`;
   const params = await getSsmParameters(ssmPath, region);
 
   const secrets = {

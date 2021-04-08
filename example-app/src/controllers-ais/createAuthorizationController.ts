@@ -93,7 +93,7 @@ export const createAuthorizationId = async (authorizationInfo: any) => {
   };
 
   logger.debug(`Create account request ${JSON.stringify(accountRequest)}`);
-
+  logger.debug(`Create account request URL ${getEnv().PSD2_AIS_API_URL}`);
   const start2 = performance.now();
 
   const authorization = await authorizationApi.createAuthorization(
@@ -150,7 +150,11 @@ export const postRevokeAuthorization = async (req: Request, res: Response) => {
 export const postCreateAuthorization = (req: Request, res: Response) => {
   logger.debug(req.body);
 
-  const authorizationInfo = req.body.TransactionRange === 'on' ? {
+  const authorizationInfo = req.body.CombinedSCA === 'on' ? {
+    transactionFromDateTime: req.body.TransactionRangeFrom,
+    transactionToDateTime: req.body.TransactionRangeTo,
+    authorizationDays: parseInt(req.body.authorizationDays, 10),
+  } : req.body.TransactionRange === 'on' ? {
     transactionFromDateTime: req.body.TransactionRangeFrom,
     transactionToDateTime: req.body.TransactionRangeTo,
   } : {
