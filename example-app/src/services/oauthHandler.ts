@@ -5,8 +5,8 @@ import { getEnv, getSecrets } from '../app/config';
 import crypto from 'crypto';
 import base64url from 'base64url';
 import { TokenData } from './token';
-import * as jwt from 'jsonwebtoken';
-import JwksRsa from 'jwks-rsa';
+import axios from 'axios';
+import { JWKS, JWT } from 'jose';
 
 interface IdToken {
     'nonce': string;
@@ -28,6 +28,38 @@ const getExpectedIssuer = () => {
     return redirectUri.substr(0, redirectUri.indexOf('/', 'https://'.length));
 };
 
+const getPublicJwks = async (url: string): Promise<JWKS.KeyStore> => {
+    logger.info('[getPublicJwks] url: ' + url);
+    try {
+        const {data} = await axios.get(url, {
+            headers: {
+                'Accept': 'application/json'
+            },
+            timeout: 5000, // ms
+        });
+        return JWKS.asKeyStore(data);
+    } catch (e) {
+        console.error(`Error while fetching public jwks: ${e}`);
+        throw e;
+    }
+};
+
+const validate = async (jwt: string, jwksUri: string, nonce?: string): Promise<IdToken> => {
+    logger.info('[validate]: ' + jwt);
+    const issuer = getExpectedIssuer();
+    const audience = getSecrets().TPP_CLIENT_ID;
+    const jwks = await getPublicJwks(jwksUri);
+    const verified = JWT.IdToken.verify(jwt, jwks, {
+        algorithms: ['ES256', 'RS256', 'PS256'],
+        clockTolerance: '120s',
+        maxTokenAge: '600s',
+        complete: true,
+        issuer,
+        audience,
+        nonce
+    });
+    return verified.payload as IdToken;
+};
 /**
  * https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken
  * Its value is the base64url encoding of the left-most half of the hash
@@ -62,58 +94,30 @@ export const verifyIdTokenAndStoreTokensToSession = async (
     };
 };
 
-export const verifyIdToken = (idToken: string, jwksUri: string,
+export const verifyIdToken = async (idToken: string, jwksUri: string,
                               nonce?: string, accessToken?: string, refreshToken?: string,
-                              code?: string, state?: string, ignoreExpiration?: boolean): Promise<IdToken> =>
-    new Promise((resolve, reject) => {
-        logger.info('Going to verify id_token');
+                              code?: string, state?: string, ignoreExpiration?: boolean): Promise<IdToken> => {
 
-        const options: jwt.VerifyOptions = {
-            algorithms: ['RS256'],
-            issuer: getExpectedIssuer(),
-            audience: getSecrets().TPP_CLIENT_ID,
-            ignoreExpiration,
-        };
-        const getKey = (header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) => {
-            const client = JwksRsa({jwksUri});
-            client.getSigningKey(header.kid || '', (_, key: JwksRsa.SigningKey) => {
-                if (key !== undefined) {
-                    const signingKey = (key as JwksRsa.RsaSigningKey).rsaPublicKey;
-                    callback(undefined, signingKey);
-                } else {
-                    callback(new Error(`Could not get the signing key from ${jwksUri}`));
-                }
-            });
-        };
-        jwt.verify(idToken, getKey, options, (err: jwt.VerifyErrors, decoded: string | object) => {
-            if (err !== null) {
-                return reject(err);
-            }
-
-            const payload = decoded as any;
-            if (nonce !== undefined && payload.nonce !== nonce) {
-                reject(new Error('Nonce does not match.'));
-            }
-
-            try {
-                // Depending on the contents verify either code and state or
-                // access token and refresh token
-                if (payload.c_hash && payload.s_hash) {
-                    verifyHash(payload.c_hash, code);
-                    verifyHash(payload.s_hash, state);
-                }
-
-                if (payload.at_hash && payload.rt_hash) {
-                    verifyHash(payload.at_hash, accessToken);
-                    verifyHash(payload.rt_hash, refreshToken);
-                }
-            } catch (err) {
-                return reject(err);
-            }
-            logger.info('Token verified');
-            resolve(payload);
-        });
-    });
+    logger.info('Going to verify id_token', idToken, jwksUri);
+    try {
+        const payload: IdToken = await validate(idToken, jwksUri, nonce);
+        // Depending on the contents verify either code and state or
+        // access token and refresh token
+        if (payload.c_hash && payload.s_hash) {
+            verifyHash(payload.c_hash, code);
+            verifyHash(payload.s_hash, state);
+        }
+        if (payload.at_hash && payload.rt_hash) {
+            verifyHash(payload.at_hash, accessToken);
+            verifyHash(payload.rt_hash, refreshToken);
+        }
+        logger.info('Token verified');
+        return payload;
+    } catch (err) {
+        logger.error('[verifyIdToken] error: ', err);
+        throw(err);
+    }
+};
 
 const renderError = (res: Response, title: string, text: string) =>
     res.status(500).render('error', {
@@ -162,6 +166,7 @@ export const verifyOauthSession = async (req: Request, res: Response, next: () =
     } catch (err) {
         const e: Error = err;
         session.tokens = undefined;
+        logger.info(err);
         return renderError(res, 'Authentication error', e.message);
     }
 

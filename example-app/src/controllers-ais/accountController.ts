@@ -39,7 +39,6 @@ const collectAccountInfo = async (ais: AisInterface, authorizationId: string): P
   return accounts
     .map((a) => {
       const account = {
-        accountId: a.accountId,
         balanceLabel: renderBalance(a),
         iban: a.identifier,
         accountName: a.productName,
